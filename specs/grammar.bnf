@@ -1,0 +1,45 @@
+LL(1)
+
+<NUMBER> ::= [0-9] | [0-9]+
+<LETTER> ::= [a-z] | [A-Z] | [a-z]+ | [A-Z]+
+<IDENT> ::= <LETTER> | <LETTER> <NUMBER> | <NUMBER> <LETTER>
+<TYPE> ::= "string" | "float" | "int" | "void"
+
+<VAR> ::= "let " <IDENT> ": " <TYPE>
+<CONST> ::= "const " <IDENT> ": " <TYPE>
+
+<VARTYPE> ::= <VAR> | <CONST>
+
+<VARDECLARE> ::= <VARTYPE> " = " <NUMBER> | <VARTYPE> " = " <IDENT> | <VARTYPE> " = " " "  <LETTER> " "
+
+<ADDITIVE> ::= " + " | " - "
+<MULTIPLICATIVE> ::= " * " | " / " | " % "
+
+<OPERATOR> ::= <ADDITIVE> | <MULTIPLICATIVE>
+
+<UNARYEXPR> ::= <NUMBER> <OPERATOR> <NUMBER> | <NUMBER>
+
+<BINARYEXPR> ::= <UNARYEXPR> <OPERATOR> <UNARYEXPR>
+
+<EXPRESSION> ::= <BINARYEXPR> | <UNARYEXPR>
+
+<IF> ::= "if" " (" <EXPRESSION> ") " <BLOCK>
+<ELSEIF> ::= "else if " " (" <EXPRESSION> ") " <BLOCK> <ELSEIF'>
+<ELSEIF'> ::= <ELSEIF> | ε
+<ELSE> ::= "else " " (" <EXPRESSION> ") " <BLOCK>
+
+<CONDITION> ::= <IF> <ELSE> ";" | <IF> ";" | <IF> <ELSEIF> <ELSE> ";" | <IF> <ELSEIF> ";"
+<POSTFIXER> ::= <IDENT> "++" | <IDENT> "--"
+<PREFIXER> ::= "++" <IDENT> | "--" <IDENT>
+
+<UPDATER> ::= <POSTFIXER> | <PREFIXER>
+
+<FOR> ::= "for " " (" <VARDECLARE> "; " <EXPRESSION> "; " <UPDATER> ";" ") " <BLOCK> ";"
+
+<WHILE> ::= "while" " (" <EXPRESSION> ") " <BLOCK> ";"
+
+<BLOCK> ::= "{" <STMNT> "}"
+
+<STMNT> ::= <CONDITION> | <BLOCK> | <WHILE> | " "
+
+<FUNCTION> ::= "fn " <IDENT> "()" <BLOCK> | "fn " <IDENT> "()" ": " <TYPE> " " <BLOCK>

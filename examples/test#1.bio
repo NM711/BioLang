@@ -1,0 +1,15 @@
+#helloworld
+
+fn main () {
+
+  if (5 < 3) {
+
+    let str: string = "hello";
+
+  };
+
+  if ("hello" === "hiyo") {
+    const helloMystring: string = ";";
+    const stringHello: string = "123213";
+  };
+};
