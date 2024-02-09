@@ -1,6 +1,8 @@
 #include "lexer.hpp"
+#include <cstdio>
 #include <iostream>
 #include <list>
+#include <regex>
 
 void printToken(Token token) {
   cout << "\n{\n" << "  id: " << token.id << ",\n";
@@ -14,7 +16,7 @@ BioLexer::BioLexer(string input) {
   this->initLookupKeywords();
   this->input = input;
   this->index = 0;
-  this->info = new LineInfo({ 0, 0 });
+  this->info = LineInfo({ 1, 1 });
 };
 
 char BioLexer::look() {
@@ -52,17 +54,20 @@ void BioLexer::initLookupKeywords() {
   this->lookup["*"] = MapValue{ Multiplication, SpecialSymbol };
   this->lookup["/"] = MapValue{ Division, SpecialSymbol };
   this->lookup["%"] = MapValue{ Modulus, SpecialSymbol };
-  this->lookup["("] = MapValue{ Left_Parenthesis, SpecialSymbol };
-  this->lookup[")"] = MapValue{ Right_Parenthesis, SpecialSymbol };
-  this->lookup["{"] = MapValue{ Left_Curly, SpecialSymbol };
-  this->lookup["}"] = MapValue{ Right_Curly, SpecialSymbol };
+  this->lookup["("] = MapValue{ LeftParenthesis, SpecialSymbol };
+  this->lookup[")"] = MapValue{ RightParenthesis, SpecialSymbol };
+  this->lookup["()"] = MapValue{ ExpressionCall, SpecialSymbol };
+  this->lookup["{"] = MapValue{ LeftCurly, SpecialSymbol };
+  this->lookup["}"] = MapValue{ RightCurly, SpecialSymbol };
   this->lookup[":"] = MapValue{ Colon, SpecialSymbol };
   this->lookup[";"] = MapValue{ Semicolon, SpecialSymbol };
   this->lookup[","] = MapValue{ Seperator, SpecialSymbol };
+  // we might need to make this a num or something or perform a check in num state.
+  this->lookup["."] = MapValue{ Period, SpecialSymbol };
   this->lookup["\n"] = MapValue{ LineBreak, Newline };
 
 
-  string alphabet = "abcdefghijklmnopqrstuvABCDEFGHIJKLMNOPQRSTUV";
+  string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   string numbers = "0123456789";
 
   for (int i = 0; i < alphabet.length(); ++i) {
@@ -78,10 +83,10 @@ void BioLexer::initLookupKeywords() {
 };
 
 void BioLexer::updateLineInfo() {
-  ++this->info->row;
+  ++this->info.row;
   if (this->look() == '\n') {
-    this->info->row = 1;
-    ++this->info->col;
+    this->info.row = 1;
+    ++this->info.col;
   };
 };
 
@@ -100,75 +105,9 @@ void BioLexer::pushToken(string kw, TokenIdentifiers id) {
     Token {
       id,
       kw,
-      this->info
+      &this->info
     }
   );
-};
-
-void BioLexer::changeState(char inputChar, LexerState &state) {
-  string stringifiedChar = string(1, inputChar);
-
-  if (this->lookup.find(stringifiedChar) != nullptr) {
-    MapValue matched = this->lookup[stringifiedChar];
-
-    switch (matched.state) {
-
-      case Newline:
-    
-        // break out of comment if exists;
-        if (state == Comment) {
-          state = CommentEnd;
-        } else {
-          state = Newline;
-        };
-
-      break;
-
-      case SpecialSymbol:
-        if (state != Comment && state != Quote) {
-          state = SpecialSymbol;
-        };
-
-      break;
-
-      case Alpha:
-
-        if (state != Comment && state != Quote && state != SpecialSymbol) {
-            state = Alpha;
-        };
-
-        // checks if the state before this was not a number, we are expecting alphanum chars, not numalpha
-      break;
-
-      case Num:
-        if (state != Comment && state != Quote && state != SpecialSymbol) {
-            state = Num;
-        };
-      break;
-
-      case Quote:
-        
-        if (state != Comment && state != Quote) {
-          state = Quote;
-        } else if (state == Quote) {
-          state = QuoteEnd;
-        };
-
-      break;
-
-      case Whitespace:
-        state = Start; 
-      break;
-
-      case Comment:
-        state = Comment;
-      break;
-
-      default:
-        state = Ignore;
-    };
-
-  };
 };
 
 list<Token> BioLexer::tokenize() {
@@ -178,66 +117,143 @@ list<Token> BioLexer::tokenize() {
   string apply;
 
   LexerState state = Start;
-  string stringChar = string(1, this->look());
 
   while (this->index < this->input.length()) {
     this->updateLineInfo();
+    string stringChar = string(1, this->look());
+    string symbol;
+    
+    try {
+      MapValue matchedChar = this->lookup[stringChar];
+    
+      switch (state) {
+        case Start: {
+            // since we are dealing with input characters, we are not composing different keywords, meaning that the states
+            // can NEVER be START, so we do not need to perform checks. Single characters fall under A - Special Chars,
+            // or B -> Alphanumeric characters.
 
-    this->changeState(this->look(), state);
+            switch (matchedChar.state) {
+              case Comment:
+              case Alpha:
+              case Num:
+              case Newline:
+              case Quote:
+              case SpecialSymbol:
+              case Whitespace:
+                state = matchedChar.state;
+              break;
 
-    switch (state) {
+              default:
+                state = Reject;
+              break;
+            };
+
+          // we want to continue on the assigned state without consuming.
+          // if for some reason it gets too messy, ill consume per switch rather than consuming on end of switch,
+          // becase if im running multiple continues, shit gets harder to debug.
+          continue;
+        };
+
         case Alpha:
         case Num:
-          word += this->look();
-        break;
+            cout << "WORD " << word << " CHAR " << this->look() << " STATE MATCHED: " << matchedChar.state << endl;
+            cout << " Special " << SpecialSymbol << endl;
 
-        case Quote:
-          if (this->look() != '\"') {
-            word += this->look();
+          // this is necessary in case you have special characters or quotations right next to a literal
+          // let myInt string:
+          // if the check did not exist this would get read as let, myInt, string:, which would on the last keyword would make this
+          // case fail the checks on the condition below this one.
+
+          if (matchedChar.state == Quote || matchedChar.state == SpecialSymbol) {
+            state = Start;
+            continue;
+          };
+
+          if (matchedChar.state != Num && matchedChar.state != Alpha && matchedChar.state != Quote && matchedChar.state != SpecialSymbol) {
+
+              if (this->exists(word)) {
+                this->matchAndPush(word);
+              } else {
+
+                // Now we must check if either:
+                // A. Word is composed entirely of Number characters.
+                // B. Word is made up of alphanumeric characters.
+
+                if (regex_match(word, regex("^[a-zA-Z]+[a-zA-Z0-9]*$"))) {
+                  this->pushToken(word, Ident);
+                } else if (state == Num && regex_match(word, regex("\\b[\\d.]+\\b"))) {
+                  this->pushToken(word, Number);
+                } else {
+                  cout << "ERROR PUSHING IN ALPHA OR NUM STATE !\n";
+                  cout << word << endl;
+                  exit(1);
+                };
+              };
+
+            word.clear();
+            state = Start;
+          } else {
+            word += this->look(); 
           };
         break;
 
         case SpecialSymbol:
+          if (matchedChar.state != SpecialSymbol) {
 
-          cout << "S: " << word << endl;
+            if (this->exists(word)) {
+              this->matchAndPush(word);
+              word.clear();
+              state = Start;
+            } else {
+              throw SyntaxError(string("Unexpected token found in ") + "\"" + word + "\"", this->info);
+            };
 
-          word += this->look();
-        break;
-
-        case Start:
-
-          cout << "WORD LENGTH " << word.length() << " WORD VALUE " << word << endl;
-
-          if (word.length() > 0) {
-              if (this->lookup.find(word) != nullptr) {
-                MapValue matched = this->lookup[word];
-                /* cout << "START STATE: " << matched.id << endl; */
-                this->pushToken(word, matched.id);
-              } else {
-                this->pushToken(word, Ident);
-              };
+          } else {
+            word += this->look();
           };
 
-        word.clear();
-      break;
-
-        case QuoteEnd:
-          this->pushToken(word, StringLiteral);
-          word.clear();
         break;
 
-      default: {
+        case Comment:
+          if (matchedChar.state == Newline) {
+            state = Start;
+          };
+        break;
 
-        if (state != CommentEnd && state != Comment && state != Newline && state != Whitespace && state != Ignore) {
-          cout << "SYNTAX ERROR >>>>>" << " (col: " << this->info->col << ", row: " << this->info->row << ")\n";
-        };
+        case Newline:
+        case Whitespace:
+          state = Start;
+        break;
+
+        case Quote:
+          cout << "IS QUOTE\n";
+          word += this->look();
+          this->eat();
+
+          if (matchedChar.state == Quote) {
+            this->pushToken(word, StringLiteral);
+            word.clear();
+            state = Start;
+          };
+
+        break;
+
+        default:
+          string at = string("Invalid at ") + "\"" + stringChar + "\"";
+          throw SyntaxError(at, this->info);
       };
+
+      this->eat();
+
+    } catch(SyntaxError error) {
+        error.errorMssg();
+        exit(1);
     };
 
-    this->eat();
   };
 
-  for (auto const &it : this->tokens) {
+
+  for (auto const it : this->tokens) {
     printToken(it);
   };
 

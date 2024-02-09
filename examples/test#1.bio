@@ -1,4 +1,6 @@
+#!
 #helloworld
+# world hi this is a comment for future refrence
 
 fn main () {
 
@@ -6,6 +8,7 @@ fn main () {
 
     let str: string = "hello";
 
+    let myNum: int = 5;
   };
 
   if ("hello" === "hiyo") {

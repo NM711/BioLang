@@ -1,6 +1,7 @@
 #ifndef LEXER_HPP
 #define LEXER_HPP
 
+#include <exception>
 #include <iostream>
 #include <list>
 #include <map>
@@ -15,16 +16,14 @@ struct LineInfo {
 
 enum LexerState {
   Start,
-  Ignore,
   Whitespace,
   Newline,
   SpecialSymbol,
   Alpha,
   Num,
   Quote,
-  QuoteEnd,
   Comment,
-  CommentEnd
+  Reject
 };
 
 enum TokenIdentifiers {
@@ -47,12 +46,13 @@ enum TokenIdentifiers {
   Float,
   String,
   StringLiteral,
-  Left_Curly,
-  Right_Curly,
-  Left_Parenthesis,
-  Right_Parenthesis,
+  LeftCurly,
+  RightCurly,
+  LeftParenthesis,
+  RightParenthesis,
   DoubleQuote,
   Colon,
+  Period,
   Semicolon,
   Seperator,
   Hashtag,
@@ -68,6 +68,7 @@ enum TokenIdentifiers {
   LesserThanOrEqual,
   Equality,
   PostOrPrefixOperator,
+  ExpressionCall
 };
 
 struct Token {
@@ -81,10 +82,28 @@ struct MapValue {
   LexerState state;
 };
 
+class SyntaxError : public exception {
+
+  private:
+    string mssg;
+    LineInfo lineInfo;
+
+  public:
+      SyntaxError(const string message, const LineInfo info) : mssg(message), lineInfo(info) {};
+
+      const char *what() {
+        return "SyntaxError";
+      };
+
+      void errorMssg() {
+        cout << this->what() << " >>>>>> " << this->mssg << " " << "(col: " << this->lineInfo.col << ", row: " << this->lineInfo.row << ")\n";
+      };
+};
+
 class BioLexer {
   private:
     list<Token> tokens;
-    LineInfo *info;
+    LineInfo info;
     string input;
     private: int index;
 
@@ -95,10 +114,8 @@ class BioLexer {
     void updateLineInfo();
     void initLookupKeywords();
     void pushToken(string kw, TokenIdentifiers id);
-    void changeState(char inputChar, LexerState &state);
     bool exists(string key);
     void matchAndPush(string key);
-
     // looks at current index
     char look();
     // advances index
