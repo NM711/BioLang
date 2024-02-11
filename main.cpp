@@ -22,7 +22,9 @@ int main() {
     data += line + "\n";
   };
 
-  BioLexer lexer = BioLexer(data);
+  BioLexer lexer = BioLexer();
+
+  lexer.setInput(data);
 
   lexer.tokenize();
   return 0;

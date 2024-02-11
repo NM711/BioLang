@@ -22,6 +22,7 @@ enum LexerState {
   Alpha,
   Num,
   Quote,
+  QuoteEnd,
   Comment,
   Reject
 };
@@ -40,11 +41,12 @@ enum TokenIdentifiers {
   ElseIf,
   Import,
   Ident,
-  Alphabet,
   Number,
   Integer,
   Float,
   String,
+  Boolean,
+  BooleanLiteral,
   StringLiteral,
   LeftCurly,
   RightCurly,
@@ -53,6 +55,7 @@ enum TokenIdentifiers {
   DoubleQuote,
   Colon,
   Period,
+  Exclamation,
   Semicolon,
   Seperator,
   Hashtag,
@@ -67,14 +70,16 @@ enum TokenIdentifiers {
   GreaterThanOrEqual,
   LesserThanOrEqual,
   Equality,
+  NotEquality,
   PostOrPrefixOperator,
-  ExpressionCall
+  Break,
+  Continue
 };
 
 struct Token {
   TokenIdentifiers id;
   string lexeme;
-  LineInfo *info;
+  LineInfo info;
 };
 
 struct MapValue {
@@ -107,21 +112,28 @@ class BioLexer {
     string input;
     private: int index;
 
-  public: BioLexer(string input);
+  public: BioLexer();
 
   private:
     unordered_map<string, MapValue> lookup;
     void updateLineInfo();
     void initLookupKeywords();
     void pushToken(string kw, TokenIdentifiers id);
-    bool exists(string key);
+    bool exists(const string &key);
     void matchAndPush(string key);
+    void checkExistsPush(string &key, LexerState &state);
+    void handleSpecial(string &character, LexerState &state);
+    void cleanup();
     // looks at current index
     char look();
+    // checks next index without advancing
+    char peek();
     // advances index
     char eat();
 
-  public: list<Token> tokenize();
+  public: 
+    void setInput(string input);
+    list<Token> tokenize();
 };
 
 #endif

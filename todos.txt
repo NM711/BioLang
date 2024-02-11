@@ -1,0 +1,5 @@
+1. Update Grammar to be able to use continue, break, and more.
+
+2. Unit Test Lexer.
+
+3. Build Pratt Parser.

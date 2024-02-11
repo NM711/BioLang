@@ -1,3 +1,9 @@
+let myStringV2: string = "hello my string";
+
+if (myStringV2 != "hello") {
+  let someRandomFloat: float = 10.3;
+};
+
 #!
 #helloworld
 # world hi this is a comment for future refrence
@@ -9,6 +15,8 @@ fn main () {
     let str: string = "hello";
 
     let myNum: int = 5;
+
+    +++myNum
   };
 
   if ("hello" === "hiyo") {
