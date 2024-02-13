@@ -21,7 +21,7 @@ class LexerTest {
       list<Token>::iterator tokenIt = tokens.begin();
       int i = 0;
       while (expectedIt != expected.end() && tokenIt != tokens.end()) {
-    
+
 
         if (*expectedIt != tokenIt->id) {
 

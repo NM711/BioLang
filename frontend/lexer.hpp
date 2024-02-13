@@ -46,6 +46,7 @@ enum TokenIdentifiers {
   Float,
   String,
   Boolean,
+  Struct,
   BooleanLiteral,
   StringLiteral,
   LeftCurly,
@@ -73,7 +74,8 @@ enum TokenIdentifiers {
   NotEquality,
   PostOrPrefixOperator,
   Break,
-  Continue
+  Continue,
+  FieldState,
 };
 
 struct Token {

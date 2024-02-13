@@ -1,23 +1,40 @@
-LL(1)
+ATTEMPT TO BUILD AN LL(1) GRAMMAR FOR THE LANGUAGE.
 
-<NUMBER> ::= [0-9] | [0-9]+
-<LETTER> ::= [a-z] | [A-Z] | [a-z]+ | [A-Z]+
-<IDENT> ::= <LETTER> | <LETTER> <NUMBER> | <NUMBER> <LETTER>
-<TYPE> ::= "string" | "float" | "int" | "boolean" | void"
+<BOOLEAN> ::= "true" | "false"
 
-<VAR> ::= "let " <IDENT> ": " <TYPE>
-<CONST> ::= "const " <IDENT> ": " <TYPE>
+<DIGIT> ::= [0-9]
+
+<ALPHABET> ::= [a-z] | [A-Z]
+
+<NUMBER> ::= <DIGIT> <NUMBER> |  ε
+
+<WORD> ::= <ALPHABET> <WORD> |  ε
+
+<ALPHANUM> ::= <NUMBER> <WORD> | <WORD> <NUMBER> |  ε
+
+<IDENT> ::= <LETTER> <ALPHANUM>
+
+<TYPE> ::= "string" | "float" | "int" | "boolean" | "void" | <IDENT>
+
+<VAR> ::= "let " <IDENT> ": " <TYPE> ";"
+
+<CONST> ::= "const " <IDENT> ": " <TYPE> ";"
+
+<STRUCT> ::= "struct" <IDENT> <STRUCTBLOCK> ";"
+
+<LITERAL> ::= <NUMBER> | <WORD> | <BOOLEAN> | <ALPHANUM>
 
 <VARTYPE> ::= <VAR> | <CONST>
 
-<VARDECLARE> ::= <VARTYPE> " = " <NUMBER> | <VARTYPE> " = " <IDENT> | <VARTYPE> " = " " "  <LETTER> " "
+<VARDECLARE> ::= <VARTYPE> " = " <LITERAL>
 
 <ADDITIVE> ::= " + " | " - "
 <MULTIPLICATIVE> ::= " * " | " / " | " % "
+<PREFIXORPOSTFIXOP> ::= "++" | "--"
 
 <OPERATOR> ::= <ADDITIVE> | <MULTIPLICATIVE>
 
-<UNARYEXPR> ::= <NUMBER> <OPERATOR> <NUMBER> | <NUMBER>
+<UNARYEXPR> ::= <LITERAL> <OPERATOR> <LITERAL>
 
 <BINARYEXPR> ::= <UNARYEXPR> <OPERATOR> <UNARYEXPR>
 
@@ -26,11 +43,15 @@ LL(1)
 <IF> ::= "if" " (" <EXPRESSION> ") " <BLOCK>
 <ELSEIF> ::= "else if " " (" <EXPRESSION> ") " <BLOCK> <ELSEIF'>
 <ELSEIF'> ::= <ELSEIF> | ε
-<ELSE> ::= "else " " (" <EXPRESSION> ") " <BLOCK>
+<ELSE> ::= "else " " (" <EXPRESSION> ") " <BLOCK> ";"
 
-<CONDITION> ::= <IF> <ELSE> ";" | <IF> ";" | <IF> <ELSEIF> <ELSE> ";" | <IF> <ELSEIF> ";"
-<POSTFIXER> ::= <IDENT> "++" | <IDENT> "--"
-<PREFIXER> ::= "++" <IDENT> | "--" <IDENT>
+<CONDITION> ::= <IF> <TAIL>
+<TAIL> ::= <ELSE> ";" | <ELSEIF> <TAIL'>
+<TAIL'> ::= <ELSE> ";" | ";"
+
+<POSTFIXER> ::= <IDENT> <PREFIXORPOSTFIXOP>
+
+<PREFIXER> ::= <PREFIXORPOSTFIXOP> <IDENT>
 
 <UPDATER> ::= <POSTFIXER> | <PREFIXER>
 
@@ -39,7 +60,15 @@ LL(1)
 <WHILE> ::= "while" " (" <EXPRESSION> ") " <BLOCK> ";"
 
 <BLOCK> ::= "{" <STMNT> "}"
+<FIELDSCOPE> ::= "public" | "private"
+<FIELDVALUE> ::= <FUNCTION> "," | <IDENT> ":" <VARTYPE> ","
 
-<STMNT> ::= <CONDITION> | <BLOCK> | <WHILE> | " "
+<FIELDS> ::= <FIELDSCOPE> <FIELDVALUE>
 
-<FUNCTION> ::= "fn " <IDENT> "()" <BLOCK> | "fn " <IDENT> "()" ": " <TYPE> " " <BLOCK>
+<STRUCTBLOCK> ::= "{" <FIELDS> "}"
+
+<STMNT> ::= <CONDITION> | <BLOCK> | <WHILE> | <VARDECLARE> | "continue" ε | "break" ε | ε
+
+<FUNCTION> ::= "fn " <IDENT> "()" ": " <TYPE> " " <BLOCK> ";"
+
+<FUNCTIONCALL> ::= <IDENT> "()" ";"

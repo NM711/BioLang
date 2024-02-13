@@ -73,6 +73,9 @@ void BioLexer::initLookupKeywords() {
   this->lookup["boolean"] = MapValue{ Boolean, Start };
   this->lookup["true"] = MapValue{ BooleanLiteral, Start };
   this->lookup["false"] = MapValue{ BooleanLiteral, Start };
+  this->lookup["struct"] = MapValue{ Struct, Start };
+  this->lookup["private"] = MapValue{ FieldState, Start };
+  this->lookup["public"] = MapValue{ FieldState, Start };
   this->lookup["!"] = MapValue{ Exclamation, SpecialSymbol };
   this->lookup["<"] = MapValue{ LesserThan, SpecialSymbol };
   this->lookup["<="] = MapValue{ LesserThanOrEqual, SpecialSymbol };
