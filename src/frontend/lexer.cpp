@@ -85,10 +85,6 @@ void BioLexer::initLookupKeywords() {
   this->lookup["struct"] = Struct;
   this->lookup["private"] = FieldState;
   this->lookup["public"] = FieldState;
-  this->lookup["<"] = LesserThan;
-  this->lookup["<="] = LesserThanOrEqual;
-  this->lookup[">"] = GreaterThan;
-  this->lookup[">="] =GreaterThanOrEqual;
 };
 
 void BioLexer::updateLineInfo() {
@@ -132,9 +128,6 @@ void BioLexer::pushToken(string kw, TokenIdentifiers id) {
 };
 
 void BioLexer::handleComment() {
-
-  // eat "#"
-  this->eat();
   while (this->look() != '\n' && this->look() != '\0') {
     cout << this->look();
     this->updateLineInfo();
@@ -256,6 +249,7 @@ void BioLexer::handleSpecial() {
 
       if (this->peek() != '=') {
         this->pushToken(op, Equal);
+        this->eat();
         break;
       };
 
@@ -267,7 +261,7 @@ void BioLexer::handleSpecial() {
 
        this->pushToken(op, Equality);
 
-
+       this->eat();
        this->eat();
        this->eat();
      } else {
@@ -282,6 +276,7 @@ void BioLexer::handleSpecial() {
 
       if (this->peek() != '=') {
         this->pushToken(op, Exclamation);
+        this->eat();
         break;
       };
 
@@ -290,7 +285,7 @@ void BioLexer::handleSpecial() {
        op += this->peek(2);
 
        this->pushToken(op, NotEquality);
-
+       this->eat();
        this->eat();
        this->eat();
       } else {
@@ -307,8 +302,10 @@ void BioLexer::handleSpecial() {
         op += this->peek();
         this->pushToken(op, Increment);
         this->eat();
+        this->eat();
       } else {
         this->pushToken(op, Addition);
+        this->eat();
       };
 
     break;
@@ -320,8 +317,10 @@ void BioLexer::handleSpecial() {
         op += this->peek();
         this->pushToken(op, Decrement);
         this->eat();
+        this->eat();
       } else {
         this->pushToken(op, Subtraction);
+        this->eat();
       };
 
     break;
@@ -351,8 +350,10 @@ void BioLexer::handleSpecial() {
         op += this->peek();
         this->pushToken(op, GreaterThanOrEqual);
         this->eat();
+        this->eat();
       } else {
        this->pushToken(op, GreaterThan);
+       this->eat();
       };
 
     break;
@@ -364,8 +365,10 @@ void BioLexer::handleSpecial() {
         op += this->peek();
         this->pushToken(op, LesserThanOrEqual);
         this->eat();
+        this->eat();
       } else {
        this->pushToken(op, LesserThan);
+       this->eat();
       };
     break;
 
@@ -406,18 +409,8 @@ list<Token> BioLexer::tokenize() {
       };
 
     } catch (SyntaxError error) {
-        cout << "TOKENS BEFORE ERROR: \n";
-
-        for (const auto &t : tokens) {
-
-          cout << "TOKEN: " << t.lexeme << endl;
-
-        };
-
-        cout << "LEFT OVER WORD: " << word << endl;
-
-        error.errorMssg();
-        exit(1);
+       error.errorMssg();
+       exit(1);
     };
   };
 

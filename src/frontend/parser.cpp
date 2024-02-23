@@ -183,12 +183,6 @@ TreeNodes::Node BioParser::parse() {
 TreeNodes::Program BioParser::generateAST() {
 
   // note that it has to be greater than one because EOF is automatically appended to the token list, before the lexer is exited.
-
-  if (this->tokens.size() > 1) {
-    cout << "No valid tokens to parse!" << endl;
-    exit(1);
-  };
-    
   TreeNodes::Program program;
 
   program.body = {};
