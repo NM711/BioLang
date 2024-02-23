@@ -1,31 +1,10 @@
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include "./frontend/lexer.hpp"
-using namespace std;
+#include "./src/repl.hpp"
 
-int main() {
+int main () {
 
-  ifstream input;
-  input.open("./examples/test#1.bio");
+  Repl repl = Repl();
 
-  if (input.is_open() == false) {
-    cout << "File failed to open!\n";
-    exit(1);
-  };
+  repl.execute();
 
-  string data;
-  string line;
-
-  while (getline(input, line)) {
-    data += line + "\n";
-  };
-
-  BioLexer lexer = BioLexer();
-
-  lexer.setInput(data);
-
-  lexer.tokenize();
   return 0;
 };

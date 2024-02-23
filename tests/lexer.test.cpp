@@ -1,4 +1,4 @@
-#include "../frontend/lexer.hpp"
+#include "../src/frontend//lexer.hpp"
 #include <list>
 #include <vector>
 
@@ -114,9 +114,9 @@ int main() {
     LeftCurly, // {
     If, // if
     LeftParenthesis, // (
-    Number, // 5
+    Integer, // 5
     GreaterThanOrEqual, // >=
-    Number, // 3
+    Integer, // 3
     RightParenthesis, // )
     LeftCurly, // {
     Const, // const
@@ -151,13 +151,13 @@ int main() {
     Colon, // :
     Integer, // int
     Equal, // =
-    Number, // 0
+    Integer, // 0
     Semicolon, // ;
     Ident, // i
     LesserThan, // <
-    Number, // 5
+    Integer, // 5
     Semicolon, // ;
-    PostOrPrefixOperator, //++
+    Increment, //++
     Ident, // i
     RightParenthesis, // )
     LeftCurly, // {
@@ -165,7 +165,7 @@ int main() {
     LeftParenthesis, // (
     Ident, // i
     Equality, // ===
-    Number, // 5
+    Integer, // 5
     RightParenthesis, // )
     LeftCurly, // {
     RightCurly, // }
@@ -178,7 +178,7 @@ int main() {
     LeftParenthesis, // (
     RightParenthesis, // )
     Equality, // ===
-    Number, // 3
+    Integer, // 3
     RightParenthesis, // )
     LeftCurly, // {
     Const, // const
@@ -199,7 +199,7 @@ int main() {
     LeftCurly, // {
     Ident, // print
     LeftParenthesis, // (
-    Number, // 123
+    Integer, // 123
     RightParenthesis, // )
     Semicolon, // ;
     Continue, // continue
@@ -228,9 +228,9 @@ int main() {
     Semicolon, // ;
     If, // if
     LeftParenthesis, // (
-    Number, // 5
+    Integer, // 5
     GreaterThanOrEqual, // >=
-    Number, // 3
+    Integer, // 3
     RightParenthesis, // )
     LeftCurly, // {
     For, // for
@@ -240,13 +240,13 @@ int main() {
     Colon, // :
     Integer, // int
     Equal, // =
-    Number, // 0
+    Integer, // 0
     Semicolon, // ;
     Ident, // i
     LesserThan, // <
-    Number, // 10
+    Integer, // 10
     Semicolon, // ;
-    PostOrPrefixOperator, // --
+    Decrement, // --
     Ident, // i
     RightParenthesis, // )
     LeftCurly, // {
@@ -254,14 +254,14 @@ int main() {
     LeftParenthesis, // (
     Ident, // i
     GreaterThan, // >
-    Number, // 5
+    Integer, // 5
     RightParenthesis, // )
     LeftCurly, // {
     If, // if
     LeftParenthesis, // (
     Ident, // i
     NotEquality, // !==
-    Number, // 7
+    Integer, // 7
     RightParenthesis, // )
     LeftCurly, // {
     Const, // const

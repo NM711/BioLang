@@ -1,26 +1,29 @@
-let myStringV2: string = "hello my string";
+10 - 3 + 342
 
-if (myStringV2 != "hello") {
-  let someRandomFloat: float = 10.3;
-};
+
+#let myStringV2: string = "hello my string";
+
+#if (myStringV2 !== "hello") {
+#  let someRandomFloat: float = 10.3;
+#};
 
 #!
 #helloworld
 # world hi this is a comment for future refrence
 
-fn main () {
-
-  if (5 < 3) {
-
-    let str: string = "hello";
-
-    let myNum: int = 5;
-
-    +++myNum
-  };
-
-  if ("hello" === "hiyo") {
-    const helloMystring: string = ";";
-    const stringHello: string = "123213";
-  };
-};
+#fn main () {
+#
+#  if (5 < 3) {
+#
+#    let str: string = "hello";
+#
+#    let myNum: int = 5;
+#
+#    +++myNum
+#  };
+#
+#  if ("hello" === "hiyo") {
+#    const helloMystring: string = ";";
+#    const stringHello: string = "123213";
+#  };
+#};
