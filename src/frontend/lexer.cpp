@@ -17,7 +17,7 @@ bool isAlphabet(char c) {
 };
 
 bool isSpecial(char c) {
-  return regex_match(string(1, c), regex("[\\+\\-*\\/#%&;.:=!(){}><]"));
+  return regex_match(string(1, c), regex("[\\+\\-*\\/\\|#%&;.:=!(){}><]"));
 };
 
 BioLexer::BioLexer() {
@@ -129,12 +129,9 @@ void BioLexer::pushToken(string kw, TokenIdentifiers id) {
 
 void BioLexer::handleComment() {
   while (this->look() != '\n' && this->look() != '\0') {
-    cout << this->look();
     this->updateLineInfo();
     this->eat();
   };
-
-  cout << "\nEND" << endl;
 };
 
 void BioLexer::handleString() {
@@ -369,6 +366,34 @@ void BioLexer::handleSpecial() {
       } else {
        this->pushToken(op, LesserThan);
        this->eat();
+      };
+    break;
+
+    case '&':
+      op += this->look();
+
+      if (this->peek() == '&') {
+        op += this->peek();
+        this->pushToken(op, And);
+        this->eat();
+        this->eat();
+      } else {
+        logWarning("\"&\" is an invalid operator, did you mean \"&&\"?");
+        this->errorState = true;
+      };
+    break;
+
+    case '|':
+      op += this->look();
+
+      if (this->peek() == '|') {
+        op += this->peek();
+        this->pushToken(op, Or);
+        this->eat();
+        this->eat();
+      } else {
+        logWarning("\"|\" is an invalid operator, did you mean \"||\"?");
+        this->errorState = true;
       };
     break;
 

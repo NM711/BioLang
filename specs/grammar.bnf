@@ -30,6 +30,7 @@ ATTEMPT TO BUILD AN LL(1) GRAMMAR FOR THE LANGUAGE.
 
 <ADDITIVE> ::= " + " | " - "
 <MULTIPLICATIVE> ::= " * " | " / " | " % "
+
 <INCREMENT> ::= "++"
 <DECREMENT> ::= "--"
 

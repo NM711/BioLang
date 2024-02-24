@@ -2,32 +2,44 @@
 #include "../utils/debug.hpp"
 #include "./lexer.hpp"
 #include <cmath>
+#include <cstdlib>
 #include <math.h>
 #include <new>
 #include <variant>
-
-// convert tokens to tree, do semantic analysis and convert the tree into bytecode.
 
 void BioParser::setTokens(list<Token> tokens) {
   this->tokens = tokens;
 };
 
 void BioParser::eat() {
-  this->tokens.pop_front();
+  cout << "SIZE: " << this->tokens.size() << endl;
+  if (this->tokens.size() != 1) {
+    return this->tokens.pop_front();
+  };
 };
 
  Token BioParser::look() {
+   cout << "LOOK: " << this->tokens.front().lexeme << endl;
    return this->tokens.front();
 };
 
 Token BioParser::peek() {
-  auto next = std::next(this->tokens.begin());
 
-  return Token{
-    next->id,
-    next->lexeme,
-    next->info
+  if (this->tokens.size() != 1) {
+    auto next = std::next(this->tokens.begin());
+
+    return Token{
+      next->id,
+      next->lexeme,
+      next->info
+    };
   };
+  return this->look();
+};
+
+bool BioParser::prefixSymbolExists(TokenIdentifiers id) {
+  const set<TokenIdentifiers> symbolsSet = {Exclamation, Increment, Decrement};
+  return symbolsSet.find(id) != symbolsSet.end();
 };
 
 TreeNodes::Node BioParser::parsePrimary() {
@@ -55,45 +67,19 @@ TreeNodes::Node BioParser::parsePrimary() {
   };
 };
 
-TreeNodes::Node BioParser::parseUpdater() {
-
+TreeNodes::Node BioParser::parsePostfix() {
   TreeNodes::Node lhs;
 
-  // postfix
-  // prefix
-  // just parse primary if none
-
-  if (this->look().id != Increment && this->look().id != Decrement) {
+  if (this->prefixSymbolExists(this->look().id) == false) {
     lhs = this->parsePrimary();
     this->eat();
 
-    if (this->look().id == Increment || this->look().id == Decrement) {
-
-      std::string op = this->look().lexeme;
+    if (this->prefixSymbolExists(this->look().id) && this->look().id != Exclamation) {
+      string op = this->look().lexeme;
       this->eat();
 
       if (!holds_alternative<TreeNodes::IdentifierNode>(lhs)) {
-        throw "Expected a valid identifier before the post increment/decrement operator!";
-      };
-
-
-      TreeNodes::UpdateExpressionNode updater = TreeNodes::UpdateExpressionNode(); 
-
-      updater.isPrefix = false;
-      updater.op = op;
-      updater.argument = new TreeNodes::Node(lhs);
-
-      lhs = updater;
-    }
-
-  } else if (this->look().id == Increment || this->look().id == Decrement) {
-      std::string op = this->look().lexeme;
-      this->eat();
-
-      TreeNodes::Node ident = this->parsePrimary();
-       
-      if (!holds_alternative<TreeNodes::IdentifierNode>(lhs)) {
-        throw "Expected a valid identifier after the prefix increment/decrement operator!";
+        throw SyntaxError("Expected a valid identifier before the postfix operator!", this->look().info);
       };
 
       TreeNodes::UpdateExpressionNode updater = TreeNodes::UpdateExpressionNode(); 
@@ -103,24 +89,44 @@ TreeNodes::Node BioParser::parseUpdater() {
       updater.argument = new TreeNodes::Node(lhs);
 
       lhs = updater;
-  } else {
-    lhs = this->parsePrimary();
-  }
+    };
+  };
 
   return lhs;
 };
 
+TreeNodes::Node BioParser::parsePrefix() {
+  TreeNodes::Node lhs = this->parsePostfix();
+
+  if (this->prefixSymbolExists(this->look().id)) {
+      std::string op = this->look().lexeme;
+      this->eat();
+      TreeNodes::Node ident = this->parsePrimary();
+      this->eat();
+
+      if (!holds_alternative<TreeNodes::IdentifierNode>(ident)) {
+        throw SyntaxError("Expected a valid identifier after the prefix operator!", this->look().info);
+      };
+
+      TreeNodes::UpdateExpressionNode updater;
+
+      updater.isPrefix = true;
+      updater.op = op;
+      updater.argument = new TreeNodes::Node(ident);
+
+      lhs = updater;
+  };
+
+  return lhs;
+};
 
 TreeNodes::Node BioParser::parseMultiplicatives() {
 
-  TreeNodes::Node lhs = this->parsePrimary();
+  TreeNodes::Node lhs = this->parsePrefix();
 
   // focus on this eat below
 
   this->eat();
-
-
-  cout << "LOOK LEXEME: " << endl;
 
   while (this->look().lexeme == "*" || this->look().lexeme == "/" || this->look().lexeme == "%") {
     std::string op = this->look().lexeme;
@@ -172,17 +178,85 @@ TreeNodes::Node BioParser::parseAdditives() {
   return lhs;
 };
 
+TreeNodes::Node BioParser::parseRelationalOps() {
+  TreeNodes::Node lhs = this->parseAdditives();
+  
+  if (this->look().id == GreaterThan || this->look().id == GreaterThanOrEqual || this->look().id == LesserThan || this->look().id == LesserThanOrEqual) {
+    string op = this->look().lexeme;
+
+    this->eat();
+
+    TreeNodes::Node rhs = this->parsePrimary();
+
+    TreeNodes::ExpressionNode expr;
+
+    expr.lhs = new TreeNodes::Node(lhs);
+    expr.op = op;
+    expr.rhs = new TreeNodes::Node(rhs);
+
+    lhs = expr;
+  };
+
+  return lhs;
+};
+
+TreeNodes::Node BioParser::parseEqualityOps() {
+  TreeNodes::Node lhs = this->parseRelationalOps();
+
+  if (this->look().id == Equality || this->look().id == NotEquality) {
+    string op = this->look().lexeme;
+
+    this->eat();
+
+    TreeNodes::Node rhs = this->parsePrimary();
+
+    TreeNodes::ExpressionNode expr;
+
+    expr.lhs = new TreeNodes::Node(lhs);
+    expr.op = op;
+    expr.rhs = new TreeNodes::Node(rhs);
+
+    lhs = expr;
+  };
+
+  return lhs;
+};
+
+TreeNodes::Node BioParser::parseLogicalOps() {
+  TreeNodes::Node lhs = this->parseEqualityOps();
+  // parses && and || operators
+  
+  if (this->look().id == Or || this->look().id == And) {
+    string op = this->look().lexeme;
+    this->eat();
+    TreeNodes::Node rhs = this->parsePrimary();
+
+    TreeNodes::ExpressionNode expr;
+
+    expr.lhs = new TreeNodes::Node(lhs);
+    expr.op = op;
+    expr.rhs = new TreeNodes::Node(rhs);
+
+    lhs = expr;
+  };
+
+  return lhs;
+};
+
 TreeNodes::Node BioParser::parseExpression() {
-  return this->parseAdditives();
+  return this->parseLogicalOps();
 };
 
 TreeNodes::Node BioParser::parse() {
-  return this->parseExpression();
+  try {
+    return this->parseExpression();
+  } catch (SyntaxError error) {
+    error.errorMssg();
+    exit(1);
+  };
 };
 
 TreeNodes::Program BioParser::generateAST() {
-
-  // note that it has to be greater than one because EOF is automatically appended to the token list, before the lexer is exited.
   TreeNodes::Program program;
 
   program.body = {};

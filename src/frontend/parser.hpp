@@ -4,6 +4,7 @@
 #include "./lexer.hpp"
 #include <string>
 #include <variant>
+#include <set>
 #include <list>
 
 namespace TreeNodes {
@@ -60,10 +61,16 @@ class BioParser {
     TreeNodes::Program generateAST();
   private:
     list<Token> tokens;
+    bool prefixSymbolExists(TokenIdentifiers id);
     TreeNodes::Node parse();
-    TreeNodes::Node parseUpdater();
+    TreeNodes::Node parseAssignment();
+    TreeNodes::Node parsePostfix();
+    TreeNodes::Node parsePrefix();
     TreeNodes::Node parseExpression();
     TreeNodes::Node parseAdditives();
+    TreeNodes::Node parseRelationalOps();
+    TreeNodes::Node parseLogicalOps();
+    TreeNodes::Node parseEqualityOps();
     TreeNodes::Node parseMultiplicatives();
     TreeNodes::Node parsePrimary();
     void eat();

@@ -59,6 +59,8 @@ enum TokenIdentifiers {
   LesserThanOrEqual,
   Equality,
   NotEquality,
+  Or,
+  And,
   Increment,
   Decrement,
   Break,
