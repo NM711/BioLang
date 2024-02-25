@@ -12,46 +12,52 @@ namespace TreeNodes {
   struct LiteralNode;
   struct ExpressionNode;
   struct VariableNode;
-  struct UpdateExpressionNode;
   struct IdentifierNode;
+  struct PrefixExpressionNode;
+  struct PostfixExpressionNode;
 
-  typedef variant<LiteralNode, ExpressionNode, VariableNode, UpdateExpressionNode, IdentifierNode> Node; 
+  typedef variant<LiteralNode, ExpressionNode, VariableNode, IdentifierNode, PostfixExpressionNode, PrefixExpressionNode> Node; 
 
   struct LiteralNode {
-    std::string kind = "PrimaryNode";
-    std::string type;
-    std::string value;
+    string kind = "PrimaryNode";
+    string type;
+    string value;
   };
 
   struct ExpressionNode {
-    std::string kind = "ExpressionNode";
+    string kind = "ExpressionNode";
     Node *lhs;
-    std::string op;
+    string op;
     Node *rhs;
   };
 
   struct VariableNode {
-    std::string kind = "VariableNode";
+    string kind = "VariableNode";
     bool isConstant;
-    std::string type;
+    string type;
     LiteralNode value;
   };
 
-  struct UpdateExpressionNode {
-    std::string kind = "UpdateExpressionNode";
-    bool isPrefix;
-    std::string op;
+  struct PrefixExpressionNode {
+    string kind = "PrefixExpressionNode";
+    string op;
+    Node *argument;
+  };
+
+  struct PostfixExpressionNode {
+    string kind = "PostfixExpressionNode";
+    string op;
     Node *argument;
   };
 
   struct IdentifierNode {
-    std::string kind = "IdentifierNode";
-    std::string name;
+    string kind = "IdentifierNode";
+    string name;
   };
 
   struct Program {
-    std::string kind = "Program";
-    std::list<Node> body;
+    string kind = "Program";
+    list<Node> body;
   };
 };
 
@@ -62,7 +68,12 @@ class BioParser {
   private:
     list<Token> tokens;
     bool prefixSymbolExists(TokenIdentifiers id);
+    void createExprNode(TreeNodes::Node &lhs);
+    string expectedMssg(string exp);
+    void checkValidType();
     TreeNodes::Node parse();
+    TreeNodes::Node parseVariable();
+    TreeNodes::Node parseBlock();
     TreeNodes::Node parseAssignment();
     TreeNodes::Node parsePostfix();
     TreeNodes::Node parsePrefix();

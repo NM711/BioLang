@@ -20,7 +20,7 @@ ATTEMPT TO BUILD AN LL(1) GRAMMAR FOR THE LANGUAGE.
 
 <CONST> ::= "const " <IDENT> ": " <TYPE> ";"
 
-<STRUCT> ::= "struct" <IDENT> <STRUCTBLOCK> ";"
+<OBJECT> ::= "object" <IDENT> <OBJECTBLOCK> ";"
 
 <LITERAL> ::= <NUMBER> | <WORD> | <BOOLEAN> | <ALPHANUM>
 
@@ -69,7 +69,7 @@ ATTEMPT TO BUILD AN LL(1) GRAMMAR FOR THE LANGUAGE.
 
 <FIELDS> ::= <FIELDSCOPE> <FIELDVALUE>
 
-<STRUCTBLOCK> ::= "{" <FIELDS> "}"
+<OBJECTBLOCK> ::= "{" <FIELDS> "}"
 
 <STMNT> ::= <CONDITION> | <BLOCK> | <WHILE> | <VARDECLARE> | "continue" ε | "break" ε | ε
 

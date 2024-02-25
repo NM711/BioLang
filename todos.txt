@@ -1,5 +1,10 @@
-1. Update Grammar to be able to use continue, break, and more.
+1. Improve error handling within the parser, for example if the parser encounters:
 
-2. Unit Test Lexer.
+   123 = 123
+   
+   Then we should throw a specific error "Invalid left hand side" or something similar, when assigning
+   you can only use idents on the left.
 
-3. Build Pratt Parser.
+2. Work on bytecode + bytecode emitter
+
+3. Work on VM

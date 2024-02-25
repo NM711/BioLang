@@ -12,20 +12,18 @@ void BioParser::setTokens(list<Token> tokens) {
 };
 
 void BioParser::eat() {
-  cout << "SIZE: " << this->tokens.size() << endl;
-  if (this->tokens.size() != 1) {
-    return this->tokens.pop_front();
+  if (this->tokens.size() > 1) {
+    this->tokens.pop_front();
   };
 };
 
  Token BioParser::look() {
-   cout << "LOOK: " << this->tokens.front().lexeme << endl;
    return this->tokens.front();
 };
 
 Token BioParser::peek() {
 
-  if (this->tokens.size() != 1) {
+  if (this->tokens.size() > 1) {
     auto next = std::next(this->tokens.begin());
 
     return Token{
@@ -37,20 +35,118 @@ Token BioParser::peek() {
   return this->look();
 };
 
+string BioParser::expectedMssg(string exp) {
+  return string("Expected a") + "\" " + exp + "\"" + string(", instead received a ") + "\"" + this->look().lexeme + "\"!";
+};
+
 bool BioParser::prefixSymbolExists(TokenIdentifiers id) {
   const set<TokenIdentifiers> symbolsSet = {Exclamation, Increment, Decrement};
   return symbolsSet.find(id) != symbolsSet.end();
+};
+
+void BioParser::checkValidType() {
+  if (this->look().id != Void && this->look().id != String && this->look().id != Integer && this->look().id != Float && this->look().id != Object) {
+    throw SyntaxError(this->expectedMssg("VALID TYPE"), this->look().info);
+  };
+};
+
+void BioParser::createExprNode(TreeNodes::Node &lhs) {
+  std::string op = this->look().lexeme;
+  this->eat();
+
+  TreeNodes::Node rhs = this->parseExpression();
+  this->eat();
+
+  // so from what im understanding, assigning expr.lhs to &lhs and expr.rhs to &rhs only works within the scope
+  // of the function. This is due to c++ automatically deallocating memory once we are out of this function,
+  // so the addresses we assigned are then automatically given undefined behaviour.
+  // So it seems like we may need a level  of dynamic memory.
+
+  TreeNodes::ExpressionNode expr;
+  expr.lhs = new TreeNodes::Node(lhs);
+  expr.op = op;
+  expr.rhs = new TreeNodes::Node(rhs);
+
+  lhs = expr;
+};
+
+TreeNodes::Node BioParser::parseVariable() {
+  bool isConstant = false;
+
+  if (this->look().id == Const) {
+    isConstant = true;
+  };
+
+  this->eat();
+
+  TreeNodes::Node ident = this->parsePrimary();
+
+  if (!holds_alternative<TreeNodes::IdentifierNode>(ident)) {
+    throw SyntaxError(this->expectedMssg("identifier"), this->look().info);
+  };
+
+  this->eat();
+
+  if (this->look().id != Colon) {
+    throw SyntaxError(this->expectedMssg(":"), this->look().info);
+  };
+
+  this->eat();
+
+  this->checkValidType();
+
+  string varType = this->look().lexeme;
+
+  if (this->look().id == Void && isConstant) {
+    throw SyntaxError(this->expectedMssg("VALID TYPE"), this->look().info);
+  };
+
+  this->eat();
+
+  // check dec end before assignment, and make sure its not const if so.
+ 
+  if (this->look().id != Equal) {
+  
+     if (this->look().id == Semicolon && isConstant) {
+       cout << "Constant must be initialized!\n";
+       exit(1);
+     } else {
+       TreeNodes::VariableNode varNode;
+
+       varNode.isConstant = isConstant;
+       varNode.type = varType;
+
+       return varNode;
+     };
+
+  };
+
+  if (this->look().id == Semicolon && isConstant) {
+    cout << "Constant must be initialized!\n";
+    exit(1);
+  } else {
+    TreeNodes::VariableNode varNode;
+
+    varNode.isConstant = isConstant;
+    varNode.type = varType;
+
+    return varNode;
+  };
+
+
 };
 
 TreeNodes::Node BioParser::parsePrimary() {
 
   switch (this->look().id) {
       case BooleanLiteral:
-        if (this->look().lexeme == "0") {
+
+          if (this->look().lexeme == "0") {
           return TreeNodes::LiteralNode{.type = "BOOL", .value = "false"};
         } else {
           return TreeNodes::LiteralNode{.type = "BOOL", .value = "true"};
         };
+
       case StringLiteral:
         return TreeNodes::LiteralNode{.type = "STRING", .value = this->look().lexeme}; 
       case IntegerLiteral:
@@ -82,13 +178,12 @@ TreeNodes::Node BioParser::parsePostfix() {
         throw SyntaxError("Expected a valid identifier before the postfix operator!", this->look().info);
       };
 
-      TreeNodes::UpdateExpressionNode updater = TreeNodes::UpdateExpressionNode(); 
+      TreeNodes::PostfixExpressionNode postfix = TreeNodes::PostfixExpressionNode();
 
-      updater.isPrefix = false;
-      updater.op = op;
-      updater.argument = new TreeNodes::Node(lhs);
+      postfix.op = op;
+      postfix.argument = new TreeNodes::Node(lhs);
 
-      lhs = updater;
+      lhs = postfix;
     };
   };
 
@@ -108,13 +203,12 @@ TreeNodes::Node BioParser::parsePrefix() {
         throw SyntaxError("Expected a valid identifier after the prefix operator!", this->look().info);
       };
 
-      TreeNodes::UpdateExpressionNode updater;
+      TreeNodes::PrefixExpressionNode prefix;
 
-      updater.isPrefix = true;
-      updater.op = op;
-      updater.argument = new TreeNodes::Node(ident);
+      prefix.op = op;
+      prefix.argument = new TreeNodes::Node(ident);
 
-      lhs = updater;
+      lhs = prefix;
   };
 
   return lhs;
@@ -124,25 +218,8 @@ TreeNodes::Node BioParser::parseMultiplicatives() {
 
   TreeNodes::Node lhs = this->parsePrefix();
 
-  // focus on this eat below
-
-  this->eat();
-
-  while (this->look().lexeme == "*" || this->look().lexeme == "/" || this->look().lexeme == "%") {
-    std::string op = this->look().lexeme;
-    cout << "RETURNING IN MULTI\n";
-    this->eat();
-
-    TreeNodes::Node rhs = this->parsePrimary();
-    this->eat();
-
-    TreeNodes::ExpressionNode expr;
-
-    expr.lhs = new TreeNodes::Node(lhs);
-    expr.op = op;
-    expr.rhs = new TreeNodes::Node(rhs);
-
-    lhs = expr;
+  while (this->look().id == Multiplication || this->look().id == Division || this->look().id == Modulus) {
+    this->createExprNode(lhs);
   };
 
   return lhs;
@@ -151,28 +228,9 @@ TreeNodes::Node BioParser::parseMultiplicatives() {
 TreeNodes::Node BioParser::parseAdditives() {
 
   TreeNodes::Node lhs = this->parseMultiplicatives();
-
-  while (this->look().lexeme == "+" || this->look().lexeme == "-") {
-    std::string op = this->look().lexeme;
-    cout << "RETURNING IN ADDITIVE\n";
-    this->eat();
-
-    TreeNodes::Node rhs = this->parsePrimary();
-    
-    this->eat();
-
-    TreeNodes::ExpressionNode expr;
-
-    // so from what im understanding, assigning expr.lhs to &lhs and expr.rhs to &rhs only works within the scope
-    // of the function. This is due to c++ automatically deallocating memory once we are out of this function,
-    // so the addresses we assigned are then automatically given undefined behaviour.
-    // So it seems like we may need a level  of dynamic memory.
-
-    expr.lhs = new TreeNodes::Node(lhs);
-    expr.op = op;
-    expr.rhs = new TreeNodes::Node(rhs);
-
-    lhs = expr;
+ 
+  while (this->look().id == Addition || this->look().id == Subtraction) {
+    this->createExprNode(lhs);
   };
 
   return lhs;
@@ -181,20 +239,8 @@ TreeNodes::Node BioParser::parseAdditives() {
 TreeNodes::Node BioParser::parseRelationalOps() {
   TreeNodes::Node lhs = this->parseAdditives();
   
-  if (this->look().id == GreaterThan || this->look().id == GreaterThanOrEqual || this->look().id == LesserThan || this->look().id == LesserThanOrEqual) {
-    string op = this->look().lexeme;
-
-    this->eat();
-
-    TreeNodes::Node rhs = this->parsePrimary();
-
-    TreeNodes::ExpressionNode expr;
-
-    expr.lhs = new TreeNodes::Node(lhs);
-    expr.op = op;
-    expr.rhs = new TreeNodes::Node(rhs);
-
-    lhs = expr;
+  while (this->look().id == GreaterThan || this->look().id == GreaterThanOrEqual || this->look().id == LesserThan || this->look().id == LesserThanOrEqual) {
+    this->createExprNode(lhs);
   };
 
   return lhs;
@@ -203,20 +249,8 @@ TreeNodes::Node BioParser::parseRelationalOps() {
 TreeNodes::Node BioParser::parseEqualityOps() {
   TreeNodes::Node lhs = this->parseRelationalOps();
 
-  if (this->look().id == Equality || this->look().id == NotEquality) {
-    string op = this->look().lexeme;
-
-    this->eat();
-
-    TreeNodes::Node rhs = this->parsePrimary();
-
-    TreeNodes::ExpressionNode expr;
-
-    expr.lhs = new TreeNodes::Node(lhs);
-    expr.op = op;
-    expr.rhs = new TreeNodes::Node(rhs);
-
-    lhs = expr;
+  while (this->look().id == Equality || this->look().id == NotEquality) {
+    this->createExprNode(lhs); 
   };
 
   return lhs;
@@ -224,32 +258,53 @@ TreeNodes::Node BioParser::parseEqualityOps() {
 
 TreeNodes::Node BioParser::parseLogicalOps() {
   TreeNodes::Node lhs = this->parseEqualityOps();
-  // parses && and || operators
-  
-  if (this->look().id == Or || this->look().id == And) {
+ 
+  while (this->look().id == Or || this->look().id == And) {
+    this->createExprNode(lhs);
+  };
+
+  return lhs;
+};
+
+TreeNodes::Node BioParser::parseAssignment() {
+  TreeNodes::Node lhs = this->parseLogicalOps();
+
+  if (holds_alternative<TreeNodes::IdentifierNode>(lhs) && this->look().id == Equal) {
+
     string op = this->look().lexeme;
     this->eat();
-    TreeNodes::Node rhs = this->parsePrimary();
+    TreeNodes::Node rhs = this->parseExpression();
+    TreeNodes::ExpressionNode assignmentExpr;
 
-    TreeNodes::ExpressionNode expr;
+    const TreeNodes::IdentifierNode arg = get<TreeNodes::IdentifierNode>(lhs);
 
-    expr.lhs = new TreeNodes::Node(lhs);
-    expr.op = op;
-    expr.rhs = new TreeNodes::Node(rhs);
+    assignmentExpr.kind = "AssignmentExpressionNode";
+    assignmentExpr.lhs = new TreeNodes::Node(lhs);
+    assignmentExpr.op = op;
+    assignmentExpr.rhs = new TreeNodes::Node(rhs);
 
-    lhs = expr;
+    lhs = assignmentExpr;
   };
 
   return lhs;
 };
 
 TreeNodes::Node BioParser::parseExpression() {
-  return this->parseLogicalOps();
+  return this->parseAssignment();
 };
 
 TreeNodes::Node BioParser::parse() {
   try {
-    return this->parseExpression();
+
+    switch (this->look().id) {
+      /* case Const: */
+      /* case Var: */
+      /* break; */
+
+      default:
+        return this->parseExpression();
+    }
+
   } catch (SyntaxError error) {
     error.errorMssg();
     exit(1);
@@ -261,9 +316,9 @@ TreeNodes::Program BioParser::generateAST() {
 
   program.body = {};
 
-  program.body.push_back(this->parse());
-
-  cout << "END OF PARSER\n";
+  while (this->tokens.size() > 1) {
+    program.body.push_back(this->parse());
+  };
 
   return program;
 };

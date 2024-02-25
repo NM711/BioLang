@@ -82,7 +82,7 @@ void BioLexer::initLookupKeywords() {
   this->lookup["void"] = Void;
   this->lookup["true"] = BooleanLiteral;
   this->lookup["false"] = BooleanLiteral;
-  this->lookup["struct"] = Struct;
+  this->lookup["object"] = Object;
   this->lookup["private"] = FieldState;
   this->lookup["public"] = FieldState;
 };

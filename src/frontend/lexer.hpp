@@ -32,7 +32,7 @@ enum TokenIdentifiers {
   Float,
   String,
   Boolean,
-  Struct,
+  Object,
   Void,
   IntegerLiteral,
   FloatLiteral,

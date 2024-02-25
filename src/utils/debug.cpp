@@ -1,10 +1,10 @@
 #include "./debug.hpp"
 #include <typeinfo>
 #include <variant>
-
+#include "./colors.hpp"
 
 void logWarning(string str) {
-  cout << "\033[33m" << "WARNING: " << str << "\033[0m" << endl;
+  cout << YELLOW << "WARNING: " << str << DEFAULT << endl;
 };
 
 void logNode(TreeNodes::Node node);
@@ -15,55 +15,53 @@ void logSide(TreeNodes::Node *node, string side) {
     cout << "NullBranch\n";
   };
 
-  cout << side << ": {\n   ";
-  logNode(*node);
-  cout << "\n  },\n"; 
+  // Pretty printing requires a bit of work but eh, fuck it.
+  // It is good enough for my use case
 
+  cout << side << YELLOW << ": (\n\t";
+  logNode(*node);
+  cout << "), \n\t" << DEFAULT;
 };
 
 void logNode(TreeNodes::Node node) {
   if (holds_alternative<TreeNodes::LiteralNode>(node)) {
 
-    TreeNodes::LiteralNode primary = get<TreeNodes::LiteralNode>(node);
+    TreeNodes::LiteralNode literal = get<TreeNodes::LiteralNode>(node);
 
-      cout << "Kind: " << primary.kind << ", ";
-      cout << "Type: " << primary.type << ", ";
-      cout << "Value: " << primary.value << " ";
+      cout << "Kind: " << literal.kind << ", ";
+      cout << "Type: " << literal.type << ", ";
+      cout << "Value: " << literal.value << " ";
+
+    } else if (holds_alternative<TreeNodes::IdentifierNode>(node)) {
+      TreeNodes::IdentifierNode ident = get<TreeNodes::IdentifierNode>(node);
+
+      cout << "Kind: " << ident.kind << ", ";
+      cout << "Name: " << ident.name << " ";
 
     } else if (holds_alternative<TreeNodes::ExpressionNode>(node)) {
       TreeNodes::ExpressionNode expr = get<TreeNodes::ExpressionNode>(node);
-
-      cout << "Kind: " << expr.kind << ", ";
-
+      cout << "Kind: " << expr.kind << ", "; 
       logSide(expr.lhs, "Lhs");
-
       cout << "Operator: " << expr.op << ", ";
-      
-      logSide(expr.rhs, "Rhs"); 
-
+      logSide(expr.rhs, "Rhs");
       cout << endl;
-    } else if (holds_alternative<TreeNodes::UpdateExpressionNode>(node)) {
-      TreeNodes::UpdateExpressionNode updater = get<TreeNodes::UpdateExpressionNode>(node);
-        
-      if (holds_alternative<TreeNodes::IdentifierNode>(*updater.argument) == false) {
-        throw "Expected an identifier to be in the arguments place within the updater node!";
-      };
-
-      TreeNodes::IdentifierNode arg = get<TreeNodes::IdentifierNode>(*updater.argument);
-
-      cout << "Kind: " << updater.kind << endl;
+    } else if (holds_alternative<TreeNodes::PrefixExpressionNode>(node)) {
+      TreeNodes::PrefixExpressionNode prefix = get<TreeNodes::PrefixExpressionNode>(node);
+      cout << "Kind: " << prefix.kind << endl;
     
-      cout << "Operator: " << updater.op << endl;
+      cout << "Operator: " << prefix.op << endl;
+
+      TreeNodes::IdentifierNode arg = get<TreeNodes::IdentifierNode>(*prefix.argument);
       cout << "Argument: " << arg.name << endl;
 
-      cout << "Prefix: ";
+    } else if (holds_alternative<TreeNodes::PostfixExpressionNode>(node)) {
+      TreeNodes::PostfixExpressionNode postfix = get<TreeNodes::PostfixExpressionNode>(node);
+      cout << "Kind: " << postfix.kind << endl;
+    
+      cout << "Operator: " << postfix.op << endl;
 
-        if (updater.isPrefix) {
-          cout << "true\n";
-        } else {
-          cout << "false\n";
-        };
-
+      TreeNodes::IdentifierNode arg = get<TreeNodes::IdentifierNode>(*postfix.argument);
+      cout << "Argument: " << arg.name << endl;
     };
 };
 
