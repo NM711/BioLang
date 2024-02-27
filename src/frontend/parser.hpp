@@ -12,11 +12,13 @@ namespace TreeNodes {
   struct LiteralNode;
   struct ExpressionNode;
   struct VariableNode;
+  struct BlockStatementNode;
+  struct FunctionNode;
   struct IdentifierNode;
   struct PrefixExpressionNode;
   struct PostfixExpressionNode;
 
-  typedef variant<LiteralNode, ExpressionNode, VariableNode, IdentifierNode, PostfixExpressionNode, PrefixExpressionNode> Node; 
+  typedef variant<LiteralNode, BlockStatementNode, FunctionNode, ExpressionNode, VariableNode, IdentifierNode, PostfixExpressionNode, PrefixExpressionNode> Node; 
 
   struct LiteralNode {
     string kind = "PrimaryNode";
@@ -31,11 +33,24 @@ namespace TreeNodes {
     Node *rhs;
   };
 
+  struct BlockStatementNode {
+    string kind = "BlockStatementNode";
+    list<Node> stmnts;
+  };
+
+  struct FunctionNode {
+    string kind = "FunctionNode";
+    IdentifierNode *ident;
+    list<Node> arguments;
+    BlockStatementNode block;
+  };
+
   struct VariableNode {
     string kind = "VariableNode";
     bool isConstant;
     string type;
-    LiteralNode value;
+    IdentifierNode *ident;
+    Node *value;
   };
 
   struct PrefixExpressionNode {
@@ -70,10 +85,14 @@ class BioParser {
     bool prefixSymbolExists(TokenIdentifiers id);
     void createExprNode(TreeNodes::Node &lhs);
     string expectedMssg(string exp);
+    void expected(TokenIdentifiers token, string symb);
+    void customExpected(bool condition, string symb);
     void checkValidType();
     TreeNodes::Node parse();
     TreeNodes::Node parseVariable();
-    TreeNodes::Node parseBlock();
+    TreeNodes::Node parseObject();
+    TreeNodes::BlockStatementNode parseBlockStmnt();
+    TreeNodes::Node parseFunction();
     TreeNodes::Node parseAssignment();
     TreeNodes::Node parsePostfix();
     TreeNodes::Node parsePrefix();

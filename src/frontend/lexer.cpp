@@ -17,7 +17,7 @@ bool isAlphabet(char c) {
 };
 
 bool isSpecial(char c) {
-  return regex_match(string(1, c), regex("[\\+\\-*\\/\\|#%&;.:=!(){}><]"));
+  return regex_match(string(1, c), regex("[\\+\\-*\\/\\|#%&;.:=!(){}><\"]"));
 };
 
 BioLexer::BioLexer() {
@@ -136,7 +136,8 @@ void BioLexer::handleComment() {
 
 void BioLexer::handleString() {
   string word = "";
-
+  // eat first "
+  this->eat();
   while (this->look() != '\"') {
     this->updateLineInfo();
     word += this->look();

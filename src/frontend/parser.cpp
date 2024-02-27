@@ -36,7 +36,19 @@ Token BioParser::peek() {
 };
 
 string BioParser::expectedMssg(string exp) {
-  return string("Expected a") + "\" " + exp + "\"" + string(", instead received a ") + "\"" + this->look().lexeme + "\"!";
+  return string("Expected ") + "\"" + exp + "\"" + string(", instead received ") + "\"" + this->look().lexeme + "\"!";
+};
+
+void BioParser::expected(TokenIdentifiers token, string symb) {
+  if (this->look().id != token) {
+    throw SyntaxError(this->expectedMssg(symb), this->look().info);
+  };
+};
+
+void BioParser::customExpected(bool condition, string symb) {
+  if (condition) {
+    throw SyntaxError(this->expectedMssg(symb), this->look().info);
+  };
 };
 
 bool BioParser::prefixSymbolExists(TokenIdentifiers id) {
@@ -70,9 +82,60 @@ void BioParser::createExprNode(TreeNodes::Node &lhs) {
   lhs = expr;
 };
 
-TreeNodes::Node BioParser::parseVariable() {
-  bool isConstant = false;
+TreeNodes::Node BioParser::parseObject() {
 
+};
+
+TreeNodes::BlockStatementNode BioParser::parseBlockStmnt() {
+  TreeNodes::BlockStatementNode block;
+
+  while (this->look().id != Semicolon) {
+    block.stmnts.push_back(this->parse());
+  };
+
+  return block;
+};
+
+TreeNodes::Node BioParser::parseFunction() {
+  TreeNodes::FunctionNode fnNode;
+
+  this->eat();
+  
+  TreeNodes::Node ident = this->parsePrimary();
+
+  this->expected(Ident, "identifier");
+
+  this->eat();
+
+  this->expected(LeftParenthesis, "(");
+
+  // Parse Arguments Here
+
+  this->eat();
+
+  this->expected(RightParenthesis, ")");
+  this->eat();
+
+  this->expected(LeftCurly, "{");
+
+  this->eat();
+
+  TreeNodes::BlockStatementNode block = this->parseBlockStmnt();
+
+  this->expected(RightCurly, "}");
+
+  this->eat();
+
+  this->expected(Semicolon, ";");
+  this->eat();
+
+
+};
+
+TreeNodes::Node BioParser::parseVariable() {
+  TreeNodes::VariableNode variableNode;
+  bool isConstant = false;
+ 
   if (this->look().id == Const) {
     isConstant = true;
   };
@@ -81,15 +144,11 @@ TreeNodes::Node BioParser::parseVariable() {
 
   TreeNodes::Node ident = this->parsePrimary();
 
-  if (!holds_alternative<TreeNodes::IdentifierNode>(ident)) {
-    throw SyntaxError(this->expectedMssg("identifier"), this->look().info);
-  };
+  this->expected(Ident, "identifier");
 
   this->eat();
 
-  if (this->look().id != Colon) {
-    throw SyntaxError(this->expectedMssg(":"), this->look().info);
-  };
+  this->expected(Colon, ":");
 
   this->eat();
 
@@ -97,43 +156,33 @@ TreeNodes::Node BioParser::parseVariable() {
 
   string varType = this->look().lexeme;
 
-  if (this->look().id == Void && isConstant) {
-    throw SyntaxError(this->expectedMssg("VALID TYPE"), this->look().info);
-  };
+  this->customExpected(this->look().id == Void && isConstant, "Non-Void");
 
   this->eat();
 
   // check dec end before assignment, and make sure its not const if so.
- 
-  if (this->look().id != Equal) {
-  
-     if (this->look().id == Semicolon && isConstant) {
-       cout << "Constant must be initialized!\n";
-       exit(1);
-     } else {
-       TreeNodes::VariableNode varNode;
 
-       varNode.isConstant = isConstant;
-       varNode.type = varType;
+  this->customExpected(isConstant && this->look().id == Semicolon, "Initializer");
 
-       return varNode;
-     };
+  if (this->look().id == Equal) {
 
+      this->eat();
+      TreeNodes::Node value = this->parsePrimary();
+
+      if (!holds_alternative<TreeNodes::LiteralNode>(value) && !holds_alternative<TreeNodes::IdentifierNode>(value)) {
+        throw SyntaxError(string("Invalid value being used as initializer in variable ") + "\"" + this->look().lexeme + "\"", this->look().info);
+      };
+
+      variableNode.value = new TreeNodes::Node(value);
+      this->eat();
   };
 
-  if (this->look().id == Semicolon && isConstant) {
-    cout << "Constant must be initialized!\n";
-    exit(1);
-  } else {
-    TreeNodes::VariableNode varNode;
+  this->expected(Semicolon, ";");
+  this->eat();
+  variableNode.isConstant = isConstant;
+  variableNode.type = varType;
 
-    varNode.isConstant = isConstant;
-    varNode.type = varType;
-
-    return varNode;
-  };
-
-
+  return variableNode;
 };
 
 TreeNodes::Node BioParser::parsePrimary() {
@@ -142,9 +191,9 @@ TreeNodes::Node BioParser::parsePrimary() {
       case BooleanLiteral:
 
           if (this->look().lexeme == "0") {
-          return TreeNodes::LiteralNode{.type = "BOOL", .value = "false"};
+          return TreeNodes::LiteralNode{.type = "BOOLEAN", .value = "false"};
         } else {
-          return TreeNodes::LiteralNode{.type = "BOOL", .value = "true"};
+          return TreeNodes::LiteralNode{.type = "BOOLEAN", .value = "true"};
         };
 
       case StringLiteral:
@@ -297,9 +346,9 @@ TreeNodes::Node BioParser::parse() {
   try {
 
     switch (this->look().id) {
-      /* case Const: */
-      /* case Var: */
-      /* break; */
+      case Const:
+      case Var:
+        return this->parseVariable();
 
       default:
         return this->parseExpression();

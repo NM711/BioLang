@@ -4,8 +4,8 @@
 #include <string>
 
 void Repl::execute() {
-  std::string input;
-  
+  string input;
+
   cout << "BioRepl v1.0.0\n";
 
   while (true) {
@@ -23,7 +23,7 @@ void Repl::execute() {
 
     cout << input << endl;
 
-    this->parser.setTokens(tokens);   
+    this->parser.setTokens(tokens);
   
     auto tree = this->parser.generateAST();
 

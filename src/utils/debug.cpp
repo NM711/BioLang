@@ -62,6 +62,19 @@ void logNode(TreeNodes::Node node) {
 
       TreeNodes::IdentifierNode arg = get<TreeNodes::IdentifierNode>(*postfix.argument);
       cout << "Argument: " << arg.name << endl;
+    } else if (holds_alternative<TreeNodes::VariableNode>(node)) {
+      TreeNodes::VariableNode variable = get<TreeNodes::VariableNode>(node);
+      cout << "Kind: " << variable.kind << endl;
+
+      cout << "Variable_Type: " << variable.type << endl;
+      
+      cout << "IsConstant: ";
+
+      (variable.isConstant) ? cout << "true\n" : cout << "false\n";
+
+      cout << "Value: " << YELLOW;
+
+      logNode(*variable.value);
     };
 };
 
