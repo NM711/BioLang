@@ -43,7 +43,7 @@ enum TokenIdentifiers {
   LeftParenthesis,
   RightParenthesis,
   Colon,
-  Period,
+  Arrow,
   Exclamation,
   Semicolon,
   Seperator,

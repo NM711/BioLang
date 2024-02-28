@@ -228,13 +228,6 @@ void BioLexer::handleSpecial() {
       this->pushToken(op, RightCurly);
     break;
 
-    case '.':
-      op += this->look();
-      this->eat();
-
-      this->pushToken(op, Period);
-    break;
-
     case ',':
       op += this->look();
       this->eat();
@@ -314,6 +307,11 @@ void BioLexer::handleSpecial() {
       if (this->peek() == '-') {
         op += this->peek();
         this->pushToken(op, Decrement);
+        this->eat();
+        this->eat();
+      } else if (this->peek() == '>') {
+        op += this->peek();
+        this->pushToken(op, Arrow);
         this->eat();
         this->eat();
       } else {

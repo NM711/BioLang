@@ -8,17 +8,42 @@
 #include <list>
 
 namespace TreeNodes {
-
+  struct ForLoopNode;
+  struct WhileLoopNode;
+  struct IfConditionNode;
+  struct ObjectPropertyNode;
+  struct ObjectNode;
   struct LiteralNode;
   struct ExpressionNode;
   struct VariableNode;
   struct BlockStatementNode;
   struct FunctionNode;
+  struct ParamNode;
   struct IdentifierNode;
   struct PrefixExpressionNode;
   struct PostfixExpressionNode;
 
-  typedef variant<LiteralNode, BlockStatementNode, FunctionNode, ExpressionNode, VariableNode, IdentifierNode, PostfixExpressionNode, PrefixExpressionNode> Node; 
+  typedef variant<LiteralNode, IfConditionNode, ForLoopNode, WhileLoopNode, ObjectPropertyNode, ObjectNode, ParamNode, BlockStatementNode, FunctionNode, ExpressionNode, VariableNode, IdentifierNode, PostfixExpressionNode, PrefixExpressionNode> Node; 
+
+  struct ObjectPropertyNode {
+    string kind = "ObjectPropertyNode";
+    bool isPrivate;
+    Node *ident;
+    string type;
+    Node *value;
+  };
+
+  struct ObjectNode {
+    string kind = "ObjectNode";
+    Node *ident;
+    list<ObjectPropertyNode> properties;
+  };
+
+  struct ParamNode {
+    string kind = "ParameterNode";
+    string type;
+    Node *ident;
+  };
 
   struct LiteralNode {
     string kind = "PrimaryNode";
@@ -40,8 +65,9 @@ namespace TreeNodes {
 
   struct FunctionNode {
     string kind = "FunctionNode";
-    IdentifierNode *ident;
-    list<Node> arguments;
+    Node *ident;
+    string functionReturnType;
+    list<ParamNode> params;
     BlockStatementNode block;
   };
 
@@ -49,8 +75,28 @@ namespace TreeNodes {
     string kind = "VariableNode";
     bool isConstant;
     string type;
-    IdentifierNode *ident;
+    Node *ident;
     Node *value;
+  };
+
+  struct ForLoopNode {
+    string kind = "ForLoopNode";
+    Node *initializer;
+    Node *condition;
+    Node *updater;
+    BlockStatementNode block;
+  };
+
+  struct WhileLoopNode {
+    string kind = "WhileLoopNode";
+    Node *condition;
+    BlockStatementNode block;
+  };
+
+  struct IfConditionNode {
+    string kind = "IfConditionNode";
+    Node *condition;
+    BlockStatementNode block;
   };
 
   struct PrefixExpressionNode {
@@ -91,9 +137,15 @@ class BioParser {
     TreeNodes::Node parse();
     TreeNodes::Node parseVariable();
     TreeNodes::Node parseObject();
+    list<TreeNodes::ObjectPropertyNode> parseObjectProperties();
+    TreeNodes::Node parseIfStmnt();
+    TreeNodes::Node parseForStmnt();
+    TreeNodes::Node parseWhileStmnt();
     TreeNodes::BlockStatementNode parseBlockStmnt();
+    list<TreeNodes::ParamNode> parseFunctionParams();
     TreeNodes::Node parseFunction();
     TreeNodes::Node parseAssignment();
+    TreeNodes::Node parseMember();
     TreeNodes::Node parsePostfix();
     TreeNodes::Node parsePrefix();
     TreeNodes::Node parseExpression();
@@ -104,7 +156,6 @@ class BioParser {
     TreeNodes::Node parseMultiplicatives();
     TreeNodes::Node parsePrimary();
     void eat();
-    Token peek();
     Token look();
 };
 

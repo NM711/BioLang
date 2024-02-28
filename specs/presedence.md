@@ -13,3 +13,4 @@ Lowest to Highest:
 |Level 7            |   Multiplicative Operators      | ```*```, ```/```, ```%```                              |
 |Level 8            |   Prefix Operators              | ```++x```, ```--x```, ```!x```                         |
 |Level 9            |   Postfix Operators             | ```x++```, ```x--```                                   |
+|Level 10           |   Object Member                 | ```x->member```                                   |

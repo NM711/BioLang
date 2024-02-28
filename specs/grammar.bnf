@@ -73,6 +73,18 @@ ATTEMPT TO BUILD AN LL(1) GRAMMAR FOR THE LANGUAGE.
 
 <STMNT> ::= <CONDITION> | <BLOCK> | <WHILE> | <VARDECLARE> | "continue" ε | "break" ε | ε
 
-<FUNCTION> ::= "fn " <IDENT> "()" ": " <TYPE> " " <BLOCK> ";"
+<PARAM> ::= <IDENT> ": " <TYPE>
 
-<FUNCTIONCALL> ::= <IDENT> "()" ";"
+<PARAMS> ::= <PARAM> ", "
+
+<FUNCTIONPARAMS> ::= <PARAM> | <PARAMS>
+
+<FUNCTION> ::= "fn " <IDENT> "(" <FUNCTIONPARAMS ")" ": " <TYPE> " " <BLOCK> ";"
+
+<ARGUMENT> ::= <IDENT> | <LITERAL> |  ε
+
+<ARGUMENTS> ::= <ARGUMENT> ", " |  ε
+
+<FUNCTIONARGS> ::= <ARGUMENT> | <ARGUMENTS>
+
+<FUNCTIONCALL> ::= <IDENT> "(" <FUNCTIONARGS> ")" ";"

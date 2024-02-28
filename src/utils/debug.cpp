@@ -75,6 +75,43 @@ void logNode(TreeNodes::Node node) {
       cout << "Value: " << YELLOW;
 
       logNode(*variable.value);
+    } else if (holds_alternative<TreeNodes::ParamNode>(node)) {
+      TreeNodes::ParamNode param = get<TreeNodes::ParamNode>(node);
+      cout << "Kind: " << param.kind << endl;
+      cout << "Param_Type: " << param.type << endl;
+      cout << "Ident: ";
+      logNode(*param.ident);
+    } else if (holds_alternative<TreeNodes::FunctionNode>(node)) {
+      TreeNodes::FunctionNode fn = get<TreeNodes::FunctionNode>(node);
+      cout << "Kind: " << fn.kind << endl;
+      cout << "Ident: (";
+      logNode(*fn.ident);
+      cout << ")\n";
+
+      cout << "Return_Type: " <<  fn.functionReturnType << endl;
+      cout << "Params: " << YELLOW << " (";
+
+      for (auto const param : fn.params) {
+        cout << "PARAM ===>\n";
+        logNode(param);
+      };
+      cout << ")" << DEFAULT << endl;
+
+      cout << "BLOCK: " << GREEN  << " (";
+      logNode(fn.block);
+      cout << GREEN << ") " << DEFAULT << endl; 
+    } else if (holds_alternative<TreeNodes::BlockStatementNode>(node)) {
+      TreeNodes::BlockStatementNode block = get<TreeNodes::BlockStatementNode>(node);
+
+      cout << "Kind: " << block.kind << endl;
+
+      cout << "Statements: \n";
+
+      for (const auto &stmnt : block.stmnts) {
+        cout << "\tSTMNT: " << YELLOW << "( ";
+        logNode(stmnt);
+        cout << "\t)" << DEFAULT << endl;
+      };
     };
 };
 
