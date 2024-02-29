@@ -1,3 +1,18 @@
+## Comments
+
+You can write comments in your code with "#", example below:
+
+```python
+
+# This is a comment above the hello string!
+
+const hello: string = "hello";
+
+```
+
+Comments are terminated after a new line.
+
+
 ## Variable Declaration
 
 Variables are declared and initialized as follows:
@@ -43,7 +58,7 @@ Objects is one way in which you can achieve composition in BioLang, objects can 
 ```ts
   object MyObject {
     private myField: int = 0;
-    public myMethod (): void {
+    public fn myMethod (): void {
       this->myField = 10;
     };
   };

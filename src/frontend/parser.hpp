@@ -12,6 +12,7 @@ namespace TreeNodes {
   struct WhileLoopNode;
   struct IfConditionNode;
   struct ObjectPropertyNode;
+  struct ObjectMethodNode;
   struct ObjectNode;
   struct LiteralNode;
   struct ExpressionNode;
@@ -23,7 +24,14 @@ namespace TreeNodes {
   struct PrefixExpressionNode;
   struct PostfixExpressionNode;
 
-  typedef variant<LiteralNode, IfConditionNode, ForLoopNode, WhileLoopNode, ObjectPropertyNode, ObjectNode, ParamNode, BlockStatementNode, FunctionNode, ExpressionNode, VariableNode, IdentifierNode, PostfixExpressionNode, PrefixExpressionNode> Node; 
+  typedef variant<LiteralNode, IfConditionNode, ForLoopNode, WhileLoopNode, ObjectPropertyNode, ObjectMethodNode, ObjectNode, ParamNode, BlockStatementNode, FunctionNode, ExpressionNode, VariableNode, IdentifierNode, PostfixExpressionNode, PrefixExpressionNode> Node; 
+
+
+  struct ObjectMethodNode {
+    string kind = "ObjectMethodNode";
+    bool isPrivate;
+    FunctionNode *method;
+  };
 
   struct ObjectPropertyNode {
     string kind = "ObjectPropertyNode";
@@ -32,6 +40,8 @@ namespace TreeNodes {
     string type;
     Node *value;
   };
+
+  typedef variant<ObjectPropertyNode, ObjectMethodNode> ObjectMemberNode;
 
   struct ObjectNode {
     string kind = "ObjectNode";
@@ -131,7 +141,7 @@ class BioParser {
     bool prefixSymbolExists(TokenIdentifiers id);
     void createExprNode(TreeNodes::Node &lhs);
     string expectedMssg(string exp);
-    void expected(TokenIdentifiers token, string symb);
+    void expected(TokenIdentifiers token, string symb, bool eat = true);
     void customExpected(bool condition, string symb);
     void checkValidType();
     TreeNodes::Node parse();

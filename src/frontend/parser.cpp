@@ -25,12 +25,14 @@ string BioParser::expectedMssg(string exp) {
   return string("Expected ") + "\"" + exp + "\"" + string(", instead received ") + "\"" + this->look().lexeme + "\"!";
 };
 
-void BioParser::expected(TokenIdentifiers token, string symb) {
+void BioParser::expected(TokenIdentifiers token, string symb, bool eat) {
   if (this->look().id != token) {
     throw SyntaxError(this->expectedMssg(symb), this->look().info);
   };
 
-  this->eat();
+  if (eat) {
+    this->eat();
+  };
 };
 
 void BioParser::customExpected(bool condition, string symb) {
@@ -56,7 +58,6 @@ void BioParser::createExprNode(TreeNodes::Node &lhs) {
   this->eat();
 
   TreeNodes::Node rhs = this->parseExpression();
-  this->eat();
 
   // so from what im understanding, assigning expr.lhs to &lhs and expr.rhs to &rhs only works within the scope
   // of the function. This is due to c++ automatically deallocating memory once we are out of this function,
@@ -88,20 +89,30 @@ list<TreeNodes::ObjectPropertyNode> BioParser::parseObjectProperties() {
       isPrivate = true;
     };
 
-    TreeNodes::Node ident = this->parsePrimary();
+    if (this->look().id == Function) {
+        TreeNodes::Node memberFnNode = this->parseFunction();
+    } else {
+        
+    };
+    
     this->expected(Ident, "property identifier");
+    TreeNodes::Node ident = this->parsePrimary();
 
     this->expected(Colon, ":");
 
     string propType = this->look().lexeme;
-    
+
     this->checkValidType();
+
+    TreeNodes::Node value = this->parse();
 
     property.ident = new TreeNodes::Node(ident);
     property.type = propFieldState;
     property.isPrivate = isPrivate;
-    /* property.value =  */
-    
+    property.value =  new TreeNodes::Node(value);
+   
+    properties.push_back(property);
+
     if (this->look().id == RightCurly) {
         break;
     };
@@ -117,8 +128,17 @@ TreeNodes::Node BioParser::parseObject() {
 
   TreeNodes::Node ident = this->parsePrimary();
 
+  this->expected(LeftCurly, "{");
+  list<TreeNodes::ObjectPropertyNode> properties = this->parseObjectProperties();
+  this->expected(RightCurly, "}");
+  this->expected(Semicolon, ";");
 
 
+  TreeNodes::ObjectNode object;
+
+  object.ident = new TreeNodes::Node(ident);
+  object.properties = properties;
+  return object;
 };
 
 TreeNodes::Node BioParser::parseForStmnt() {
@@ -134,14 +154,11 @@ TreeNodes::Node BioParser::parseForStmnt() {
     init = new TreeNodes::Node(this->parse());
   };
 
-  this->expected(Semicolon, ";");
-
   TreeNodes::Node expr = this->parseExpression();
 
   this->expected(Semicolon, ";");
 
   TreeNodes::Node upd = this->parseExpression();
-
   this->expected(RightParenthesis, ")");
 
   this->expected(LeftCurly, "{");
@@ -229,8 +246,8 @@ list<TreeNodes::ParamNode> BioParser::parseFunctionParams() {
   if (this->look().id != RightParenthesis) {
     while (true) {
       TreeNodes::ParamNode param;
+      this->expected(Ident, "param identifier", false);
       TreeNodes::Node ident = this->parsePrimary();
-      this->expected(Ident, "param identifier");
       this->expected(Colon, ":");
       string paramType = this->look().lexeme;
       this->checkValidType();
@@ -256,9 +273,9 @@ TreeNodes::Node BioParser::parseFunction() {
 
   this->eat();
 
-  TreeNodes::Node ident = this->parsePrimary();
+  this->expected(Ident, "identifier", false);
 
-  this->expected(Ident, "identifier");
+  TreeNodes::Node ident = this->parsePrimary();
 
   this->expected(LeftParenthesis, "(");
 
@@ -296,10 +313,10 @@ TreeNodes::Node BioParser::parseVariable() {
   };
 
   this->eat();
-
+  
+  this->expected(Ident, "identifier", false);
+  
   TreeNodes::Node ident = this->parsePrimary();
-
-  this->expected(Ident, "identifier");
 
   this->expected(Colon, ":");
   
@@ -312,21 +329,16 @@ TreeNodes::Node BioParser::parseVariable() {
   // check dec end before assignment, and make sure its not const if so.
 
   this->customExpected(isConstant && this->look().id == Semicolon, "Initializer");
-  cout << this->look().lexeme << " 123123123" << endl;
   if (this->look().id == Equal) {
-
       this->eat();
-      TreeNodes::Node value = this->parsePrimary();
+      TreeNodes::Node value = this->parse();
 
       if (!holds_alternative<TreeNodes::LiteralNode>(value) && !holds_alternative<TreeNodes::IdentifierNode>(value)) {
         throw SyntaxError(string("Invalid value being used as initializer in variable ") + "\"" + this->look().lexeme + "\"", this->look().info);
       };
 
       variableNode.value = new TreeNodes::Node(value);
-      this->eat();
   };
-
-  cout << "VAR LEXEME: " << this->look().lexeme;
 
   this->expected(Semicolon, ";");
   
@@ -343,25 +355,53 @@ TreeNodes::Node BioParser::parseVariable() {
 
 TreeNodes::Node BioParser::parsePrimary() {
 
-  switch (this->look().id) {
-      case BooleanLiteral:
+  TreeNodes::LiteralNode literal;
 
-          if (this->look().lexeme == "0") {
-          return TreeNodes::LiteralNode{.type = "BOOLEAN", .value = "false"};
+  switch (this->look().id) {
+      case BooleanLiteral: {
+        literal.type = "boolean";
+
+        if (this->look().lexeme == "0") {
+          literal.value = "false";
         } else {
-          return TreeNodes::LiteralNode{.type = "BOOLEAN", .value = "true"};
+          literal.value = "true";
         };
 
-      case StringLiteral:
-        return TreeNodes::LiteralNode{.type = "STRING", .value = this->look().lexeme}; 
-      case IntegerLiteral:
-        return TreeNodes::LiteralNode{.type = "INT", .value = this->look().lexeme};
-      case FloatLiteral:
-        return TreeNodes::LiteralNode{.type = "FLOAT", .value = this->look().lexeme};
-      case EndOfFile:
+        this->eat();
+        return literal;
+      };
+
+      case StringLiteral: {
+        literal.type = "string";
+        literal.value = this->look().lexeme;
+        this->eat();
+        return literal;
+      };
+
+      case IntegerLiteral: {
+        literal.type = "int";
+        literal.value = this->look().lexeme;
+        this->eat();
+        return literal;
+      };
+
+      case FloatLiteral: {
+        literal.type = "float";
+        literal.value = this->look().lexeme;
+        this->eat();
+        return literal;
+      };
+      
+      case EndOfFile: {
         return TreeNodes::LiteralNode{.type = "EOF", .value = this->look().lexeme};
-      case Ident:
-        return TreeNodes::IdentifierNode{.name = this->look().lexeme};
+      };
+
+      case Ident: {
+        const TreeNodes::IdentifierNode ident = {.name = this->look().lexeme};
+        this->eat();
+        return ident;
+      };
+
       default:
         cout << "Unexpected token id found!" << " (\"" << this->look().lexeme << "\") at (col: " << this->look().info.col << ", row: " << this->look().info.row << ")\n";
         exit(1);
@@ -373,8 +413,6 @@ TreeNodes::Node BioParser::parseMember() {
   
   if (this->prefixSymbolExists(this->look().id) == false) {
     lhs = this->parsePrimary();
-    this->eat();
-
     while (this->look().id == Arrow) {
       string op = this->look().lexeme;
       this->eat();
@@ -403,10 +441,10 @@ TreeNodes::Node BioParser::parseMember() {
 TreeNodes::Node BioParser::parsePostfix() {
   TreeNodes::Node lhs = this->parseMember();
 
-  if (this->prefixSymbolExists(this->look().id) && this->look().id != Exclamation) {
+  if (holds_alternative<TreeNodes::IdentifierNode>(lhs) && this->prefixSymbolExists(this->look().id) && this->look().id != Exclamation) {
     string op = this->look().lexeme;
     this->eat();
-
+    cout << "IN HERE\n";
     if (!holds_alternative<TreeNodes::IdentifierNode>(lhs)) {
       throw SyntaxError("Expected a valid identifier before the postfix operator!", this->look().info);
     };
@@ -429,7 +467,6 @@ TreeNodes::Node BioParser::parsePrefix() {
       std::string op = this->look().lexeme;
       this->eat();
       TreeNodes::Node ident = this->parsePrimary();
-      this->eat();
 
       if (!holds_alternative<TreeNodes::IdentifierNode>(ident)) {
         throw SyntaxError("Expected a valid identifier after the prefix operator!", this->look().info);

@@ -7,11 +7,11 @@ main.out: ./main.cpp ./src/repl.cpp $(FE)/parser.cpp
 depen: $(FE)/lexer.cpp ./src/utils/debug.cpp
 		$(CC) -c $(FE)/lexer.cpp ./src/utils/debug.cpp
 
-test: ./tests/lexer.test.cpp ./lexer.o
-		$(CC) -o test.out ./tests/lexer.test.cpp ./lexer.o
+test: ./tests/lexer.test.cpp
+		$(CC) -o test.out ./tests/lexer.test.cpp ./build/dependencies/debug.o ./build/dependencies/lexer.o
 
 run:
 		./build/main.out
 
 clean:
-		rm -rf ./build 
+		rm -rf ./build ./test.out

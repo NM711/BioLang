@@ -99,7 +99,7 @@ const string input3 =
 
 
 int main() {
-  
+
   LexerTest tester = LexerTest();
   BioLexer lexer = BioLexer();
 
@@ -114,9 +114,9 @@ int main() {
     LeftCurly, // {
     If, // if
     LeftParenthesis, // (
-    Integer, // 5
+    IntegerLiteral, // 5
     GreaterThanOrEqual, // >=
-    Integer, // 3
+    IntegerLiteral, // 3
     RightParenthesis, // )
     LeftCurly, // {
     Const, // const
@@ -151,11 +151,11 @@ int main() {
     Colon, // :
     Integer, // int
     Equal, // =
-    Integer, // 0
+    IntegerLiteral, // 0
     Semicolon, // ;
     Ident, // i
     LesserThan, // <
-    Integer, // 5
+    IntegerLiteral, // 5
     Semicolon, // ;
     Increment, //++
     Ident, // i
@@ -165,7 +165,7 @@ int main() {
     LeftParenthesis, // (
     Ident, // i
     Equality, // ===
-    Integer, // 5
+    IntegerLiteral, // 5
     RightParenthesis, // )
     LeftCurly, // {
     RightCurly, // }
@@ -178,7 +178,7 @@ int main() {
     LeftParenthesis, // (
     RightParenthesis, // )
     Equality, // ===
-    Integer, // 3
+    IntegerLiteral, // 3
     RightParenthesis, // )
     LeftCurly, // {
     Const, // const
@@ -199,7 +199,7 @@ int main() {
     LeftCurly, // {
     Ident, // print
     LeftParenthesis, // (
-    Integer, // 123
+    IntegerLiteral, // 123
     RightParenthesis, // )
     Semicolon, // ;
     Continue, // continue
@@ -228,9 +228,9 @@ int main() {
     Semicolon, // ;
     If, // if
     LeftParenthesis, // (
-    Integer, // 5
+    IntegerLiteral, // 5
     GreaterThanOrEqual, // >=
-    Integer, // 3
+    IntegerLiteral, // 3
     RightParenthesis, // )
     LeftCurly, // {
     For, // for
@@ -239,12 +239,12 @@ int main() {
     Ident, // i
     Colon, // :
     Integer, // int
-    Equal, // =
-    Integer, // 0
+    Equality, // ===
+    IntegerLiteral, // 0
     Semicolon, // ;
     Ident, // i
     LesserThan, // <
-    Integer, // 10
+    IntegerLiteral, // 10
     Semicolon, // ;
     Decrement, // --
     Ident, // i
@@ -254,14 +254,14 @@ int main() {
     LeftParenthesis, // (
     Ident, // i
     GreaterThan, // >
-    Integer, // 5
+    IntegerLiteral, // 5
     RightParenthesis, // )
     LeftCurly, // {
     If, // if
     LeftParenthesis, // (
     Ident, // i
     NotEquality, // !==
-    Integer, // 7
+    IntegerLiteral, // 7
     RightParenthesis, // )
     LeftCurly, // {
     Const, // const

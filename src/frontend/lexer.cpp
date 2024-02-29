@@ -17,7 +17,7 @@ bool isAlphabet(char c) {
 };
 
 bool isSpecial(char c) {
-  return regex_match(string(1, c), regex("[\\+\\-*\\/\\|#%&;.:=!(){}><\"]"));
+  return regex_match(string(1, c), regex("[\\+\\-*\\/\\|#%&;.,:=!(){}><\"]"));
 };
 
 BioLexer::BioLexer() {
