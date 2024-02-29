@@ -30,15 +30,13 @@ namespace TreeNodes {
   struct ObjectMethodNode {
     string kind = "ObjectMethodNode";
     bool isPrivate;
-    FunctionNode *method;
+    Node *method;
   };
 
   struct ObjectPropertyNode {
     string kind = "ObjectPropertyNode";
     bool isPrivate;
-    Node *ident;
-    string type;
-    Node *value;
+    Node *data;
   };
 
   typedef variant<ObjectPropertyNode, ObjectMethodNode> ObjectMemberNode;
@@ -46,7 +44,7 @@ namespace TreeNodes {
   struct ObjectNode {
     string kind = "ObjectNode";
     Node *ident;
-    list<ObjectPropertyNode> properties;
+    list<ObjectMemberNode> fields;
   };
 
   struct ParamNode {
@@ -147,7 +145,7 @@ class BioParser {
     TreeNodes::Node parse();
     TreeNodes::Node parseVariable();
     TreeNodes::Node parseObject();
-    list<TreeNodes::ObjectPropertyNode> parseObjectProperties();
+    list<TreeNodes::ObjectMemberNode> parseObjectFields();
     TreeNodes::Node parseIfStmnt();
     TreeNodes::Node parseForStmnt();
     TreeNodes::Node parseWhileStmnt();

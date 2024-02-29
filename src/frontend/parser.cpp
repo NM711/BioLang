@@ -72,12 +72,10 @@ void BioParser::createExprNode(TreeNodes::Node &lhs) {
   lhs = expr;
 };
 
-list<TreeNodes::ObjectPropertyNode> BioParser::parseObjectProperties() {
-  list<TreeNodes::ObjectPropertyNode> properties = {};
+list<TreeNodes::ObjectMemberNode> BioParser::parseObjectFields() {
+  list<TreeNodes::ObjectMemberNode> fields = {};
 
   while (true) {
-
-    TreeNodes::ObjectPropertyNode property;
 
     bool isPrivate = false;
 
@@ -90,37 +88,29 @@ list<TreeNodes::ObjectPropertyNode> BioParser::parseObjectProperties() {
     };
 
     if (this->look().id == Function) {
-        TreeNodes::Node memberFnNode = this->parseFunction();
+        TreeNodes::ObjectMethodNode method;
+        method.isPrivate = isPrivate;
+        method.method = new TreeNodes::Node(this->parseFunction());
+        fields.push_back(method);
+    } else if (this->look().id == Const || this->look().id == Var) {
+      TreeNodes::ObjectPropertyNode property;
+      TreeNodes::Node data = this->parseVariable();
+
+      property.isPrivate = isPrivate;
+      property.data = new TreeNodes::Node(data);
+
+      fields.push_back(property);
     } else {
-        
+      cout << "Unexpected field type!\n";
+      exit(1);
     };
-    
-    this->expected(Ident, "property identifier");
-    TreeNodes::Node ident = this->parsePrimary();
-
-    this->expected(Colon, ":");
-
-    string propType = this->look().lexeme;
-
-    this->checkValidType();
-
-    TreeNodes::Node value = this->parse();
-
-    property.ident = new TreeNodes::Node(ident);
-    property.type = propFieldState;
-    property.isPrivate = isPrivate;
-    property.value =  new TreeNodes::Node(value);
-   
-    properties.push_back(property);
 
     if (this->look().id == RightCurly) {
         break;
     };
-
-    this->expected(Seperator, ",");
   };
 
-  return properties;
+  return fields;
 };
 
 TreeNodes::Node BioParser::parseObject() {
@@ -129,7 +119,7 @@ TreeNodes::Node BioParser::parseObject() {
   TreeNodes::Node ident = this->parsePrimary();
 
   this->expected(LeftCurly, "{");
-  list<TreeNodes::ObjectPropertyNode> properties = this->parseObjectProperties();
+  list<TreeNodes::ObjectMemberNode> fields = this->parseObjectFields();
   this->expected(RightCurly, "}");
   this->expected(Semicolon, ";");
 
@@ -137,7 +127,7 @@ TreeNodes::Node BioParser::parseObject() {
   TreeNodes::ObjectNode object;
 
   object.ident = new TreeNodes::Node(ident);
-  object.properties = properties;
+  object.fields = fields;
   return object;
 };
 

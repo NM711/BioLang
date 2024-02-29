@@ -57,7 +57,9 @@ Objects is one way in which you can achieve composition in BioLang, objects can 
 
 ```ts
   object MyObject {
-    private myField: int = 0;
+    private const myField: int = 0;
+    private let index: int = 1;
+
     public fn myMethod (): void {
       this->myField = 10;
     };
