@@ -1,6 +1,6 @@
 #include "./parser.hpp"
-#include "../utils/debug.hpp"
-#include "./lexer.hpp"
+#include "../../utils/debug.hpp"
+#include "../lexer/lexer.hpp"
 #include <cmath>
 #include <cstdlib>
 #include <math.h>
@@ -200,8 +200,6 @@ TreeNodes::Node BioParser::parseIfStmnt() {
   // parse expression seems to be eating more than what it is supposed to, resolve issue tomorrow;
 
   TreeNodes::Node expr = this->parseExpression();
-
-  cout << "BREJ: " << this->look().lexeme << endl;
 
   this->expected(RightParenthesis, ")");
 
@@ -424,7 +422,6 @@ TreeNodes::Node BioParser::parseMember() {
     };
   };
 
-  cout << "IN MEMBER: " << this->look().lexeme << endl;
   return lhs;
 };
 
@@ -434,7 +431,6 @@ TreeNodes::Node BioParser::parsePostfix() {
   if (holds_alternative<TreeNodes::IdentifierNode>(lhs) && this->prefixSymbolExists(this->look().id) && this->look().id != Exclamation) {
     string op = this->look().lexeme;
     this->eat();
-    cout << "IN HERE\n";
     if (!holds_alternative<TreeNodes::IdentifierNode>(lhs)) {
       throw SyntaxError("Expected a valid identifier before the postfix operator!", this->look().info);
     };
@@ -501,8 +497,6 @@ TreeNodes::Node BioParser::parseRelationalOps() {
   while (this->look().id == GreaterThan || this->look().id == GreaterThanOrEqual || this->look().id == LesserThan || this->look().id == LesserThanOrEqual) {
     this->createExprNode(lhs);
   };
-
-  cout <<  "IN RELATIONAL OPS: " <<  this->look().lexeme << endl;
 
   return lhs;
 };

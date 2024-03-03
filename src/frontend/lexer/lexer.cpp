@@ -1,5 +1,5 @@
 #include "./lexer.hpp"
-#include "../utils/debug.hpp"
+#include "../../utils/debug.hpp"
 #include <cstddef>
 #include <cstdio>
 #include <iostream>
@@ -75,6 +75,7 @@ void BioLexer::initLookupKeywords() {
   this->lookup["while"] = While;
   this->lookup["break"] = Break;
   this->lookup["continue"] = Continue;
+  this->lookup["return"] = Return;
   this->lookup["int"] = Integer;
   this->lookup["float"] = Float;
   this->lookup["string"] = String;

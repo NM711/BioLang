@@ -1,5 +1,5 @@
-#include "./frontend/lexer.hpp"
-#include "./frontend/parser.hpp"
+#include "./frontend/lexer/lexer.hpp"
+#include "./frontend/parser/parser.hpp"
 
 class Repl {
 

@@ -1,9 +1,13 @@
 #ifndef SRC_DEBUG_HPP
 #define SRC_DEBUG_HPP
 
-#include "../frontend/parser.hpp"
+#include "../frontend/parser/parser.hpp"
+#include "../frontend/bytecode/bytecode.hpp"
 #include <variant>
 #include <string>
+
+void dissasembleChunk(BioChunk &chunk);
+void dissasembleInstruction(Instruction &instruction);
 void logTree(TreeNodes::Program tree);
 void logWarning(string str);
 #endif

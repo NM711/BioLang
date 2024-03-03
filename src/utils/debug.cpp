@@ -1,7 +1,67 @@
 #include "./debug.hpp"
+#include "./colors.hpp"
 #include <typeinfo>
 #include <variant>
-#include "./colors.hpp"
+#include <iomanip>
+
+void logInstruction(Instruction &instruction, string opname) {
+  cout << instruction.code << " " << " " << opname << " " << " ";
+
+  if (instruction.constant != nullptr) {
+    cout << instruction.constant;
+  };
+
+  cout << endl;
+};
+
+void dissasembleInstruction(Instruction instruction) {
+
+  switch (instruction.code) {
+    case OP_ADD:
+      logInstruction(instruction, "OP_ADD");
+    break;
+
+    case OP_BREAK:
+      logInstruction(instruction, "OP_BREAK");
+    break;
+
+    case OP_CONTINUE:
+      logInstruction(instruction, "OP_CONTINUE");
+    break;
+
+    case OP_VAR:
+      logInstruction(instruction, "OP_VAR");
+    break;
+
+    case OP_CONST:
+      logInstruction(instruction, "OP_CONST");
+    break;
+
+    case OP_RETURN:
+      logInstruction(instruction, "OP_BREAK");
+    break;
+
+    case OP_EXIT:
+      logInstruction(instruction, "OP_EXIT");
+    break;
+
+    default:
+      cout << "Unknown opcode!\n";
+      exit(1);
+  };
+};
+
+void dissasembleChunk(BioChunk &chunk) {
+  cout << "==> CHUNK <==\n";
+
+  // we will esentially iterate over the vector of codes within the chunk.
+  // remember a chunk is simply a sequence of opcodes.
+
+  for (const auto &instruction : chunk) {
+    dissasembleInstruction(instruction);
+  };
+
+};
 
 void logWarning(string str) {
   cout << YELLOW << "WARNING: " << str << DEFAULT << endl;

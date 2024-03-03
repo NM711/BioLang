@@ -8,3 +8,5 @@
 2. Work on bytecode + bytecode emitter
 
 3. Work on VM
+
+4. Fix lexer line number issue

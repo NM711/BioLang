@@ -1,7 +1,7 @@
 #ifndef RECURSIVE_DESCENT_HPP
 #define RECURSIVE_DESCENT_HPP
 
-#include "./lexer.hpp"
+#include "../lexer/lexer.hpp"
 #include <string>
 #include <variant>
 #include <set>
@@ -129,6 +129,8 @@ namespace TreeNodes {
     list<Node> body;
   };
 };
+
+// TODO: add parse return + parse fn/method call.
 
 class BioParser {
   public:
