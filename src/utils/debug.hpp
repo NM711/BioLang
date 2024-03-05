@@ -6,7 +6,7 @@
 #include <variant>
 #include <string>
 
-void dissasembleChunk(BioChunk &chunk);
+void dissasembleChunk(vector<Instruction> &chunk);
 void dissasembleInstruction(Instruction &instruction);
 void logTree(TreeNodes::Program tree);
 void logWarning(string str);

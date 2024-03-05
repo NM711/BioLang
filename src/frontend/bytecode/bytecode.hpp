@@ -5,16 +5,12 @@
 #include <stack>
 #include "../parser/parser.hpp"
 
-typedef double Value;
+typedef variant<float, int, string> Value;
 
 struct Instruction {
   unsigned short code;
   Value *constant;
 };
-
-// Data representation for bytecode sequence
-
-typedef vector<Instruction> BioChunk;
 
 // Operation codes for our bytecode
 
@@ -28,7 +24,7 @@ enum OperationCode {
   OP_DIV,
   OP_MULT,
   OP_MOD,
-  OPINCREMENT,
+  OP_INCREMENT,
   OP_DECREMENT,
   OP_EQUALITY,
   OP_NOT_EQUALITY,
@@ -56,12 +52,17 @@ enum OperationCode {
 
 class BytecodeCompiler {
   private:
-    stack<BioChunk> chunks;
+    vector<Instruction> chunk;
     TreeNodes::Program source;
-
+    unsigned short compileOperator(string op);
+    void compileNode(TreeNodes::Node &node);
+    void compileLiteral(TreeNodes::LiteralNode &literal);
+    Instruction generateInstruction(unsigned short code, Value *value);
   public:
+    BytecodeCompiler();
     void setSource(TreeNodes::Program program);
-    stack<BioChunk> compile;
+    vector<Instruction> getInstructions();
+    void compile();
 };
 
 #endif

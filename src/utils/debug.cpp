@@ -51,7 +51,7 @@ void dissasembleInstruction(Instruction instruction) {
   };
 };
 
-void dissasembleChunk(BioChunk &chunk) {
+void dissasembleChunk(vector<Instruction> &chunk) {
   cout << "==> CHUNK <==\n";
 
   // we will esentially iterate over the vector of codes within the chunk.
