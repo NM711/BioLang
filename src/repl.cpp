@@ -1,6 +1,4 @@
 #include "./repl.hpp"
-#include "./debug/debug.h"
-#include "frontend/bytecode/bytecode.hpp"
 #include "utils/debug.hpp"
 #include <string>
 
@@ -9,22 +7,6 @@ void Repl::execute() {
 
   cout << "BioRepl v1.0.0\n";
 
-
-  BioChunk c = { 
-    Instruction{
-        .code = OP_VAR,
-        .constant = "HELLO"
-    },
-
-    Instruction{
-        .code = OP_EXIT,
-        .constant = &"1"
-    }
-  };
-
-  dissasembleChunk(c);
-
-/*
   while (true) {
 
     cout << "\n>>> ";
@@ -41,9 +23,18 @@ void Repl::execute() {
     cout << input << endl;
 
     this->parser.setTokens(tokens);
-  
+
     auto tree = this->parser.generateAST();
 
-    logTree(tree);
-  };*/
+    this->compiler.setSource(tree);
+    this->compiler.compile();
+
+    auto chunk = this->compiler.getInstructions();
+    dissasembleChunk(chunk);
+
+    vm.setChunk(chunk);
+    vm.execute();
+
+    /* logTree(tree); */
+  };
 };

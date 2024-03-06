@@ -9,14 +9,14 @@ void BytecodeCompiler::setSource(TreeNodes::Program source) {
   this->source = source;
 };
 
-vector<Instruction> BytecodeCompiler::getInstructions() {
+list<Instruction> BytecodeCompiler::getInstructions() {
   return this->chunk;
 };
 
-Instruction BytecodeCompiler::generateInstruction(unsigned short code, Value *value) {
+Instruction BytecodeCompiler::generateInstruction(unsigned short code, Data *data) {
   return Instruction{
      code,
-     value
+     data
   };
 };
 
@@ -57,19 +57,19 @@ unsigned short BytecodeCompiler::compileOperator(string op) {
 
 void BytecodeCompiler::compileLiteral(TreeNodes::LiteralNode &literal) {
 
-  Value value;
+  Data *data = new Data();
 
   if (literal.type == "boolean" || literal.type == "int") {
-    value = stof(literal.value);
+    data->value = stoi(literal.value); 
   } else if (literal.type == "float") {
-    value = stof(literal.value);
+    data->value = stof(literal.value);
   } else if (literal.type == "string") {
-    value = stof(literal.value);
-  } else if (literal.type == "void") {
-    value = nullptr;
+    data->value = literal.value;
+  } else {
+    data = nullptr;
   };
 
-  this->chunk.push_back(this->generateInstruction(OP_VALUE, &value));
+  this->chunk.push_back(this->generateInstruction(OP_VALUE, data));
 };
 
 // TODO: Start clearing the nodes during compilation into bytecode
@@ -77,33 +77,40 @@ void BytecodeCompiler::compileLiteral(TreeNodes::LiteralNode &literal) {
 void BytecodeCompiler::compileNode(TreeNodes::Node &node) {
   if (holds_alternative<TreeNodes::ExpressionNode>(node)) {
     const auto expr = get<TreeNodes::ExpressionNode>(node);
+    // 10 + 23 + 2 + 1
+    // change OP_VALUE to OP_PUSH later
+    // OP_VALUE, OP_VALUE, OP_ADD, OP_VALUE, OP_VALUE, OP_ADD
 
     this->compileNode(*expr.lhs);
-
+    this->compileNode(*expr.rhs);
     this->chunk.push_back(this->generateInstruction(this->compileOperator(expr.op), nullptr));
 
-    this->compileNode(*expr.rhs);
+    delete expr.lhs;
+    delete expr.rhs;
 
   } else if (holds_alternative<TreeNodes::LiteralNode>(node)) {
+
     auto literal = get<TreeNodes::LiteralNode>(node);
-    this->compileLiteral(get<TreeNodes::LiteralNode>(node));
+    this->compileLiteral(literal);
+
+  } else if (holds_alternative<TreeNodes::IdentifierNode>(node)) {
+
+    auto ident = get<TreeNodes::IdentifierNode>(node);
+    Value name = ident.name;
+
+    Data *data = new Data();
+
+    data->value = name;
+
+    this->chunk.push_back(this->generateInstruction(OP_ID, data));
+
+  } else if (holds_alternative<TreeNodes::FunctionNode>(node)) {
+    auto fn = get<TreeNodes::FunctionNode>(node);
   };
 };
 
 void BytecodeCompiler::compile() {
   for (auto &node : this->source.body) {
-
-    if (holds_alternative<TreeNodes::ExpressionNode>(node)) {
-      const auto expr = get<TreeNodes::ExpressionNode>(node);
-
-      this->compile();
-
-      /* switch (expr.op) { */
-      
-      /* } */
-
-
-    };
-
+    this->compileNode(node);
   };
 };

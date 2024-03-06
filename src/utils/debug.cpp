@@ -7,8 +7,13 @@
 void logInstruction(Instruction &instruction, string opname) {
   cout << instruction.code << " " << " " << opname << " " << " ";
 
-  if (instruction.constant != nullptr) {
-    cout << instruction.constant;
+  if (instruction.data != nullptr) {
+    auto data = *instruction.data;
+
+
+    if (data.isInt()) {
+      cout << get<int>(data.value) << endl;
+    };
   };
 
   cout << endl;
@@ -19,6 +24,14 @@ void dissasembleInstruction(Instruction instruction) {
   switch (instruction.code) {
     case OP_ADD:
       logInstruction(instruction, "OP_ADD");
+    break;
+
+    case OP_VALUE:
+      logInstruction(instruction, "OP_VALUE");
+    break;
+
+    case OP_ID:
+      logInstruction(instruction, "OP_ID");
     break;
 
     case OP_BREAK:
@@ -39,7 +52,7 @@ void dissasembleInstruction(Instruction instruction) {
 
     case OP_RETURN:
       logInstruction(instruction, "OP_BREAK");
-    break;
+    break; 
 
     case OP_EXIT:
       logInstruction(instruction, "OP_EXIT");
@@ -51,7 +64,7 @@ void dissasembleInstruction(Instruction instruction) {
   };
 };
 
-void dissasembleChunk(vector<Instruction> &chunk) {
+void dissasembleChunk(list<Instruction> &chunk) {
   cout << "==> CHUNK <==\n";
 
   // we will esentially iterate over the vector of codes within the chunk.

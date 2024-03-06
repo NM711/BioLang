@@ -1,15 +1,32 @@
 #ifndef BYTECODE_H
 #define BYTECODE_H
 
-#include <vector>
 #include <stack>
+#include <variant>
 #include "../parser/parser.hpp"
 
 typedef variant<float, int, string> Value;
 
+class Data {
+  public:
+    Value value;
+
+    bool isInt() {
+      return holds_alternative<int>(value);
+    };
+
+    bool isFloat() {
+      return holds_alternative<float>(value);
+    };
+
+    bool isString() {
+      return holds_alternative<string>(value);
+    };
+};
+
 struct Instruction {
   unsigned short code;
-  Value *constant;
+  Data *data;
 };
 
 // Operation codes for our bytecode
@@ -52,16 +69,16 @@ enum OperationCode {
 
 class BytecodeCompiler {
   private:
-    vector<Instruction> chunk;
+    list<Instruction> chunk;
     TreeNodes::Program source;
     unsigned short compileOperator(string op);
     void compileNode(TreeNodes::Node &node);
     void compileLiteral(TreeNodes::LiteralNode &literal);
-    Instruction generateInstruction(unsigned short code, Value *value);
+    Instruction generateInstruction(unsigned short code, Data *data);
   public:
     BytecodeCompiler();
     void setSource(TreeNodes::Program program);
-    vector<Instruction> getInstructions();
+    list<Instruction> getInstructions();
     void compile();
 };
 

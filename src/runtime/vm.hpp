@@ -1,4 +1,5 @@
 #include "../frontend/bytecode/bytecode.hpp"
+#include "../utils/debug.hpp"
 #include <queue>
 
 enum RuntimeResultState {
@@ -9,10 +10,14 @@ enum RuntimeResultState {
 
 class BioVirtualMachine {
   private:
-    // instruction pointer
-    unsigned ip;
-    stack<BioChunk> chunks;
-    queue<BioChunk> queue;
+    list<Instruction> chunk;
+    stack<Data> vmStack;
+    queue<Data> vmQueue;
+    RuntimeResultState dispatch(); 
+    Instruction look();
+    Instruction advance();
   public:
+    BioVirtualMachine();
+    void setChunk(list<Instruction> &chunk);
     void execute();
 };
