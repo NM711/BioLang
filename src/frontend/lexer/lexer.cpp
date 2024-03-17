@@ -1,23 +1,21 @@
 #include "./lexer.hpp"
+#include "../../errors.hpp"
 #include "../../utils/debug.hpp"
-#include <cstddef>
-#include <cstdio>
 #include <iostream>
 #include <list>
 #include <regex>
 #include <variant>
 
-
 bool isDigit(char c) {
-  return regex_match(string(1, c), regex("[0-9]"));
+  return std::regex_match(std::string(1, c), std::regex("[0-9\\.]"));
 };
 
 bool isAlphabet(char c) {
-  return regex_match(string(1, c), regex("[a-zA-Z]"));
+  return std::regex_match(std::string(1, c), std::regex("[a-zA-Z]"));
 };
 
 bool isSpecial(char c) {
-  return regex_match(string(1, c), regex("[\\+\\-*\\/\\|#%&;.,:=!(){}><\"]"));
+  return std::regex_match(std::string(1, c), std::regex("[\\+\\-*\\/\\|#%&;\\.,:=!(){}><\"]"));
 };
 
 BioLexer::BioLexer() {
@@ -29,7 +27,7 @@ BioLexer::BioLexer() {
   this->info = LineInfo({ 1, 1 });
 };
 
-void BioLexer::setInput(string input) {
+void BioLexer::setInput(std::string input) {
   this->input = input;
 };
 
@@ -53,13 +51,13 @@ char BioLexer::eat() {
   return this->input[++this->index];
 };
 
-void BioLexer::checkExistsPush(string &key) {
+void BioLexer::checkExistsPush(std::string &key) {
   if (this->exists(key)) {
     this->matchAndPush(key);
     key.clear();
   } else {
-    string at = string("Unexpected in ") + "\"" + key + "\"" + ", when attempting to push token!"; 
-    throw SyntaxError(at, this->info);
+    std::string at = std::string("Unexpected in ") + "\"" + key + "\"" + ", when attempting to push token!"; 
+    throw FrontendException::SyntaxError(at, this->info);
   };
 };
 
@@ -76,11 +74,13 @@ void BioLexer::initLookupKeywords() {
   this->lookup["break"] = Break;
   this->lookup["continue"] = Continue;
   this->lookup["return"] = Return;
+  this->lookup["as"] = As;
   this->lookup["int"] = Integer;
   this->lookup["float"] = Float;
   this->lookup["string"] = String;
   this->lookup["boolean"] = Boolean;
   this->lookup["void"] = Void;
+  this->lookup["null"] = Null;
   this->lookup["true"] = BooleanLiteral;
   this->lookup["false"] = BooleanLiteral;
   this->lookup["object"] = Object;
@@ -89,20 +89,20 @@ void BioLexer::initLookupKeywords() {
 };
 
 void BioLexer::updateLineInfo() {
-  ++this->info.row;
+  ++this->info.col;
   if (this->look() == '\n') {
-    this->info.row = 1;
-    ++this->info.col;
+    this->info.col = 0;
+    ++this->info.row;
   };
 };
 
-bool BioLexer::exists(const variant<string, char> &key) {
-  string k;
+bool BioLexer::exists(const std::variant<std::string, char> &key) {
+  std::string k;
 
-  if (holds_alternative<string>(key)) {
-    k = get<string>(key);
-  } else if (holds_alternative<char>(key)) {
-    k = string(1, get<char>(key));
+  if (std::holds_alternative<std::string>(key)) {
+    k = std::get<std::string>(key);
+  } else if (std::holds_alternative<char>(key)) {
+    k = std::string(1, std::get<char>(key));
   };
 
   if (this->lookup.find(k) == this->lookup.end()) {
@@ -112,12 +112,12 @@ bool BioLexer::exists(const variant<string, char> &key) {
   };
 };
 
-void BioLexer::matchAndPush(string key) {
+void BioLexer::matchAndPush(std::string key) {
   TokenIdentifiers matched = this->lookup[key];
   this->pushToken(key, matched);
 };
 
-void BioLexer::pushToken(string kw, TokenIdentifiers id) {
+void BioLexer::pushToken(std::string kw, TokenIdentifiers id) {
 
   this->tokens.push_back(
     Token {
@@ -136,14 +136,20 @@ void BioLexer::handleComment() {
 };
 
 void BioLexer::handleString() {
-  string word = "";
+  std::string word = "";
   // eat first "
   this->eat();
-  while (this->look() != '\"') {
+
+  while (this->look() != '\"' && this->look() != '\0') {
     this->updateLineInfo();
     word += this->look();
     this->eat();
   };
+
+  if (this->look() == '\0') {
+    throw FrontendException::SyntaxError("Expected end of string!", this->info);
+  };
+
   // eat double quote
   this->eat();
 
@@ -151,7 +157,7 @@ void BioLexer::handleString() {
 };
 
 void BioLexer::handleLiteralsOrKW() {
-  string word = "";
+  std::string word = "";
   // you can have alpha num chars in ident.
 
   while (isDigit(this->look()) || isAlphabet(this->look())) {
@@ -164,20 +170,20 @@ void BioLexer::handleLiteralsOrKW() {
 
   if (this->exists(word)) {
     this->matchAndPush(word);
-  } else if (regex_match(word, regex("^[a-zA-Z]+[a-zA-Z0-9]*$"))) {
+  } else if (std::regex_match(word, std::regex("^[a-zA-Z]+[a-zA-Z0-9]*$"))) {
     this->pushToken(word, Ident);
-  } else if (regex_match(word, regex("[0-9]+"))) {
+  } else if (std::regex_match(word, std::regex("[0-9]+"))) {
     this->pushToken(word, IntegerLiteral); 
-  } else if (regex_match(word, regex("[0-9]+.[0-9]+"))) {
+  } else if (std::regex_match(word, std::regex("[0-9]+.[0-9]+"))) {
     this->pushToken(word, FloatLiteral);
   } else {
-    string at = string("Unexpected in ") + "\"" + word + "\"" + ", when attempting to push literal or ident token!"; 
-    throw SyntaxError(at, this->info);
+    std::string at = std::string("Unexpected in ") + "\"" + word + "\"" + ", when attempting to push literal or ident token!"; 
+    throw FrontendException::SyntaxError(at, this->info);
   };
 };
 
 void BioLexer::handleSpecial() {
-  string op;
+  std::string op;
 
   switch (this->look()) {
  
@@ -378,7 +384,7 @@ void BioLexer::handleSpecial() {
         this->eat();
         this->eat();
       } else {
-        logWarning("\"&\" is an invalid operator, did you mean \"&&\"?");
+        logWarning("\"&\" is an invalid bitwise operator, did you mean \"&&\"?");
         this->errorState = true;
       };
     break;
@@ -392,7 +398,7 @@ void BioLexer::handleSpecial() {
         this->eat();
         this->eat();
       } else {
-        logWarning("\"|\" is an invalid operator, did you mean \"||\"?");
+        logWarning("\"|\" is an invalid bitwise operator, did you mean \"||\"?");
         this->errorState = true;
       };
     break;
@@ -405,14 +411,14 @@ void BioLexer::handleSpecial() {
   op.clear();
 };
 
-list<Token> BioLexer::tokenize() {
+std::list<Token> BioLexer::tokenize() {
 
   if (this->input.empty()) {
-    cout << "Input cannot be empty!\n";
+    std::cout << "Input cannot be empty!\n";
     exit(1);
   };
 
-  string word;
+  std::string word;
 
   while (this->look() != '\0') {
     try {
@@ -429,18 +435,18 @@ list<Token> BioLexer::tokenize() {
       };
 
       if (this->errorState) {
-          string at = string("Invalid at ") + "\"" + this->look() + "\"";
-          throw SyntaxError(at, this->info);
+          std::string at = std::string("Invalid at ") + "\"" + this->look() + "\"";
+          throw FrontendException::SyntaxError(at, this->info);
       };
 
-    } catch (SyntaxError error) {
-       error.errorMssg();
+    } catch (FrontendException::SyntaxError error) {
+       std::cout << error.what();
        exit(1);
     };
   };
 
   this->pushToken("EOF", EndOfFile);
-  list<Token> tempTokens = this->tokens;
+  std::list<Token> tempTokens = this->tokens;
   this->cleanup();
 
   return tempTokens;

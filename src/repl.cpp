@@ -1,5 +1,5 @@
 #include "./repl.hpp"
-#include "utils/debug.hpp"
+// #include "utils/debug.hpp"
 #include <string>
 
 void Repl::execute() {
@@ -26,14 +26,14 @@ void Repl::execute() {
 
     auto tree = this->parser.generateAST();
 
-    this->compiler.setSource(tree);
-    this->compiler.compile();
+    // this->compiler.setSource(tree);
+    // this->compiler.compile();
 
-    auto chunk = this->compiler.getInstructions();
-    dissasembleChunk(chunk);
+    // auto chunk = this->compiler.getInstructions();
+    // dissasembleChunk(chunk);
 
-    vm.setChunk(chunk);
-    vm.execute();
+    // vm.setChunk(chunk);
+    // vm.execute();
 
     /* logTree(tree); */
   };

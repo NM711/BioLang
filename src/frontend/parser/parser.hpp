@@ -2,6 +2,7 @@
 #define RECURSIVE_DESCENT_HPP
 
 #include "../lexer/lexer.hpp"
+#include "../../common.hpp"
 #include <string>
 #include <variant>
 #include <set>
@@ -9,6 +10,8 @@
 
 namespace TreeNodes {
   struct ForLoopNode;
+  struct FunctionCallNode;
+  struct DataTypeNode;
   struct WhileLoopNode;
   struct IfConditionNode;
   struct ObjectPropertyNode;
@@ -16,117 +19,147 @@ namespace TreeNodes {
   struct ObjectNode;
   struct LiteralNode;
   struct ExpressionNode;
-  struct VariableNode;
+  struct VariableDeclarationNode;
   struct BlockStatementNode;
-  struct FunctionNode;
+  struct FunctionDeclarationNode;
   struct ParamNode;
   struct IdentifierNode;
   struct PrefixExpressionNode;
   struct PostfixExpressionNode;
 
-  typedef variant<LiteralNode, IfConditionNode, ForLoopNode, WhileLoopNode, ObjectPropertyNode, ObjectMethodNode, ObjectNode, ParamNode, BlockStatementNode, FunctionNode, ExpressionNode, VariableNode, IdentifierNode, PostfixExpressionNode, PrefixExpressionNode> Node; 
+  typedef std::variant<LiteralNode, IfConditionNode, ForLoopNode, WhileLoopNode, ObjectPropertyNode, ObjectMethodNode, ObjectNode, ParamNode, BlockStatementNode, VariableDeclarationNode, ExpressionNode, FunctionDeclarationNode, IdentifierNode, PostfixExpressionNode, PrefixExpressionNode, FunctionCallNode> Node; 
 
+  struct DataTypeNode {
+    std::string kind = "DataTypeNode"; 
+    DataType typeValue;
+    // if the data type is of interface, then we need to refrence that interface via ident.
+    std::string *ident = nullptr;
+    LineInfo position;
+  };
 
   struct ObjectMethodNode {
-    string kind = "ObjectMethodNode";
+    std::string kind = "ObjectMethodNode";
     bool isPrivate;
     Node *method;
+    LineInfo position;
   };
 
   struct ObjectPropertyNode {
-    string kind = "ObjectPropertyNode";
+    std::string kind = "ObjectPropertyNode";
     bool isPrivate;
     Node *data;
+    LineInfo position;
   };
 
-  typedef variant<ObjectPropertyNode, ObjectMethodNode> ObjectMemberNode;
+  typedef std::variant<ObjectPropertyNode, ObjectMethodNode> ObjectMemberNode;
 
   struct ObjectNode {
-    string kind = "ObjectNode";
+    std::string kind = "ObjectNode";
     Node *ident;
-    list<ObjectMemberNode> fields;
+    std::list<ObjectMemberNode> fields;
+    LineInfo position;
   };
 
   struct ParamNode {
-    string kind = "ParameterNode";
-    string type;
+    std::string kind = "ParameterNode";
+    DataTypeNode type;
     Node *ident;
+    LineInfo position;
   };
 
   struct LiteralNode {
-    string kind = "PrimaryNode";
-    string type;
-    string value;
+    std::string kind = "PrimaryNode";
+    DataTypeNode type;
+    std::string value;
+    LineInfo position;
   };
+  
+  // expression wont contain line number, but its elements will.
 
   struct ExpressionNode {
-    string kind = "ExpressionNode";
+    std::string kind = "ExpressionNode";
     Node *lhs;
-    string op;
+    std::string op;
     Node *rhs;
   };
 
   struct BlockStatementNode {
-    string kind = "BlockStatementNode";
-    list<Node> stmnts;
+    std::string kind = "BlockStatementNode";
+    std::list<Node> stmnts;
   };
 
-  struct FunctionNode {
-    string kind = "FunctionNode";
+  struct FunctionDeclarationNode {
+    std::string kind = "FunctionDeclarationNode";
     Node *ident;
-    string functionReturnType;
-    list<ParamNode> params;
+    DataTypeNode functionReturnType;
+    std::list<ParamNode> params;
     BlockStatementNode block;
+    LineInfo position;
   };
 
-  struct VariableNode {
-    string kind = "VariableNode";
+  struct VariableDeclarationNode {
+    std::string kind = "VariableDeclarationNode";
     bool isConstant;
-    string type;
+    DataTypeNode type;
     Node *ident;
     Node *value;
+    LineInfo position;
+  };
+
+  struct FunctionCallNode {
+    std::string kind = "FunctionCallNode";
+    Node *called;
+    // only stores idents or literals
+    std::list<Node> arguments;
+    LineInfo position;
   };
 
   struct ForLoopNode {
-    string kind = "ForLoopNode";
+    std::string kind = "ForLoopNode";
     Node *initializer;
     Node *condition;
     Node *updater;
     BlockStatementNode block;
+    LineInfo position;
   };
 
   struct WhileLoopNode {
-    string kind = "WhileLoopNode";
+    std::string kind = "WhileLoopNode";
     Node *condition;
     BlockStatementNode block;
+    LineInfo position;
   };
 
   struct IfConditionNode {
-    string kind = "IfConditionNode";
+    std::string kind = "IfConditionNode";
     Node *condition;
     BlockStatementNode block;
+    LineInfo position;
   };
 
   struct PrefixExpressionNode {
-    string kind = "PrefixExpressionNode";
-    string op;
+    std::string kind = "PrefixExpressionNode";
+    std::string op;
     Node *argument;
+    LineInfo position;
   };
 
   struct PostfixExpressionNode {
-    string kind = "PostfixExpressionNode";
-    string op;
+    std::string kind = "PostfixExpressionNode";
+    std::string op;
     Node *argument;
+    LineInfo position;
   };
 
   struct IdentifierNode {
-    string kind = "IdentifierNode";
-    string name;
+    std::string kind = "IdentifierNode";
+    std::string name;
+    LineInfo position;
   };
 
   struct Program {
-    string kind = "Program";
-    list<Node> body;
+    std::string kind = "Program";
+    std::list<Node> body;
   };
 };
 
@@ -134,25 +167,25 @@ namespace TreeNodes {
 
 class BioParser {
   public:
-    void setTokens(list<Token> tokens);
+    void setTokens(std::list<Token> tokens);
     TreeNodes::Program generateAST();
   private:
-    list<Token> tokens;
+    std::list<Token> tokens;
     bool prefixSymbolExists(TokenIdentifiers id);
     void createExprNode(TreeNodes::Node &lhs);
-    string expectedMssg(string exp);
-    void expected(TokenIdentifiers token, string symb, bool eat = true);
-    void customExpected(bool condition, string symb);
+    std::string expectedMssg(std::string exp);
+    void expected(TokenIdentifiers token, std::string symb, bool eat = true);
+    void customExpected(bool condition, std::string symb);
     void checkValidType();
     TreeNodes::Node parse();
     TreeNodes::Node parseVariable();
     TreeNodes::Node parseObject();
-    list<TreeNodes::ObjectMemberNode> parseObjectFields();
+    std::list<TreeNodes::ObjectMemberNode> parseObjectFields();
     TreeNodes::Node parseIfStmnt();
     TreeNodes::Node parseForStmnt();
     TreeNodes::Node parseWhileStmnt();
     TreeNodes::BlockStatementNode parseBlockStmnt();
-    list<TreeNodes::ParamNode> parseFunctionParams();
+    std::list<TreeNodes::ParamNode> parseFunctionParams();
     TreeNodes::Node parseFunction();
     TreeNodes::Node parseAssignment();
     TreeNodes::Node parseMember();
@@ -160,11 +193,13 @@ class BioParser {
     TreeNodes::Node parsePrefix();
     TreeNodes::Node parseExpression();
     TreeNodes::Node parseAdditives();
+    TreeNodes::Node parseCall();
     TreeNodes::Node parseRelationalOps();
     TreeNodes::Node parseLogicalOps();
     TreeNodes::Node parseEqualityOps();
     TreeNodes::Node parseMultiplicatives();
     TreeNodes::Node parsePrimary();
+    TreeNodes::DataTypeNode parseType();
     void eat();
     Token look();
 };

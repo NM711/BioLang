@@ -1,6 +1,9 @@
 #include "./bytecode.hpp"
 #include <variant>
 
+// What im going to do is that, i am going to apply semantic analysis and then compile the bytecode.
+// This is so I dont have to do it all in the parser, or create another seperate step.
+
 BytecodeCompiler::BytecodeCompiler() {
   this->chunk = {};
 };
@@ -13,10 +16,10 @@ list<Instruction> BytecodeCompiler::getInstructions() {
   return this->chunk;
 };
 
-Instruction BytecodeCompiler::generateInstruction(unsigned short code, Data *data) {
+Instruction BytecodeCompiler::generateInstruction(unsigned short code, Value value) {
   return Instruction{
      code,
-     data
+     value
   };
 };
 
@@ -56,15 +59,20 @@ unsigned short BytecodeCompiler::compileOperator(string op) {
 };
 
 void BytecodeCompiler::compileLiteral(TreeNodes::LiteralNode &literal) {
-
   Data *data = new Data();
 
-  if (literal.type == "boolean" || literal.type == "int") {
+  if (literal.type == "boolean") {
+    (literal.value == "false") ? data->value = 0 : data->value = 1;
+    data->type = T_BOOLEAN;
+  } else if (literal.type == "int") {
     data->value = stoi(literal.value); 
-  } else if (literal.type == "float") {
+    data->type = T_INTEGER;
+  }  else if (literal.type == "float") {
     data->value = stof(literal.value);
+    data->type = T_FLOAT;
   } else if (literal.type == "string") {
     data->value = literal.value;
+    data->type = T_STRING;
   } else {
     data = nullptr;
   };

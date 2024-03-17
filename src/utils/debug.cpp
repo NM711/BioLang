@@ -1,22 +1,11 @@
 #include "./debug.hpp"
 #include "./colors.hpp"
-#include <typeinfo>
 #include <variant>
 #include <iomanip>
 
-void logInstruction(Instruction &instruction, string opname) {
-  cout << instruction.code << " " << " " << opname << " " << " ";
-
-  if (instruction.data != nullptr) {
-    auto data = *instruction.data;
-
-
-    if (data.isInt()) {
-      cout << get<int>(data.value) << endl;
-    };
-  };
-
-  cout << endl;
+void logInstruction(Instruction &instruction, std::string opname) {
+  std::cout << instruction.code << " " << " " << opname << " " << " ";
+  std::cout << std::endl;
 };
 
 void dissasembleInstruction(Instruction instruction) {
@@ -59,13 +48,13 @@ void dissasembleInstruction(Instruction instruction) {
     break;
 
     default:
-      cout << "Unknown opcode!\n";
+      std::cout << "Unknown opcode!\n";
       exit(1);
   };
 };
 
-void dissasembleChunk(list<Instruction> &chunk) {
-  cout << "==> CHUNK <==\n";
+void dissasembleChunk(std::list<Instruction> &chunk) {
+  std::cout << "==> CHUNK <==\n";
 
   // we will esentially iterate over the vector of codes within the chunk.
   // remember a chunk is simply a sequence of opcodes.
@@ -76,121 +65,121 @@ void dissasembleChunk(list<Instruction> &chunk) {
 
 };
 
-void logWarning(string str) {
-  cout << YELLOW << "WARNING: " << str << DEFAULT << endl;
+void logWarning(std::string str) {
+  std::cout << YELLOW << "WARNING: " << str << DEFAULT << std::endl;
 };
 
 void logNode(TreeNodes::Node node);
 
-void logSide(TreeNodes::Node *node, string side) {
+void logSide(TreeNodes::Node *node, std::string side) {
 
   if (node == nullptr) {
-    cout << "NullBranch\n";
+    std::cout << "NullBranch\n";
   };
 
   // Pretty printing requires a bit of work but eh, fuck it.
   // It is good enough for my use case
 
-  cout << side << YELLOW << ": (\n\t";
+  std::cout << side << YELLOW << ": (\n\t";
   logNode(*node);
-  cout << "), \n\t" << DEFAULT;
+  std::cout << "), \n\t" << DEFAULT;
 };
 
 void logNode(TreeNodes::Node node) {
-  if (holds_alternative<TreeNodes::LiteralNode>(node)) {
+  if (std::holds_alternative<TreeNodes::LiteralNode>(node)) {
 
-    TreeNodes::LiteralNode literal = get<TreeNodes::LiteralNode>(node);
+    TreeNodes::LiteralNode literal = std::get<TreeNodes::LiteralNode>(node);
 
-      cout << "Kind: " << literal.kind << ", ";
-      cout << "Type: " << literal.type << ", ";
-      cout << "Value: " << literal.value << " ";
+      std::cout << "Kind: " << literal.kind << ", ";
+      std::cout << "Type: " << literal.type.typeValue << ", ";
+      std::cout << "Value: " << literal.value << " ";
 
-    } else if (holds_alternative<TreeNodes::IdentifierNode>(node)) {
-      TreeNodes::IdentifierNode ident = get<TreeNodes::IdentifierNode>(node);
+    } else if (std::holds_alternative<TreeNodes::IdentifierNode>(node)) {
+      TreeNodes::IdentifierNode ident = std::get<TreeNodes::IdentifierNode>(node);
 
-      cout << "Kind: " << ident.kind << ", ";
-      cout << "Name: " << ident.name << " ";
+      std::cout << "Kind: " << ident.kind << ", ";
+      std::cout << "Name: " << ident.name << " ";
 
-    } else if (holds_alternative<TreeNodes::ExpressionNode>(node)) {
-      TreeNodes::ExpressionNode expr = get<TreeNodes::ExpressionNode>(node);
-      cout << "Kind: " << expr.kind << ", "; 
+    } else if (std::holds_alternative<TreeNodes::ExpressionNode>(node)) {
+      TreeNodes::ExpressionNode expr = std::get<TreeNodes::ExpressionNode>(node);
+      std::cout << "Kind: " << expr.kind << ", "; 
       logSide(expr.lhs, "Lhs");
-      cout << "Operator: " << expr.op << ", ";
+      std::cout << "Operator: " << expr.op << ", ";
       logSide(expr.rhs, "Rhs");
-      cout << endl;
-    } else if (holds_alternative<TreeNodes::PrefixExpressionNode>(node)) {
-      TreeNodes::PrefixExpressionNode prefix = get<TreeNodes::PrefixExpressionNode>(node);
-      cout << "Kind: " << prefix.kind << endl;
+      std::cout << std::endl;
+    } else if (std::holds_alternative<TreeNodes::PrefixExpressionNode>(node)) {
+      TreeNodes::PrefixExpressionNode prefix = std::get<TreeNodes::PrefixExpressionNode>(node);
+      std::cout << "Kind: " << prefix.kind << std::endl;
     
-      cout << "Operator: " << prefix.op << endl;
+      std::cout << "Operator: " << prefix.op << std::endl;
 
-      TreeNodes::IdentifierNode arg = get<TreeNodes::IdentifierNode>(*prefix.argument);
-      cout << "Argument: " << arg.name << endl;
+      TreeNodes::IdentifierNode arg = std::get<TreeNodes::IdentifierNode>(*prefix.argument);
+      std::cout << "Argument: " << arg.name << std::endl;
 
-    } else if (holds_alternative<TreeNodes::PostfixExpressionNode>(node)) {
+    } else if (std::holds_alternative<TreeNodes::PostfixExpressionNode>(node)) {
       TreeNodes::PostfixExpressionNode postfix = get<TreeNodes::PostfixExpressionNode>(node);
-      cout << "Kind: " << postfix.kind << endl;
+      std::cout << "Kind: " << postfix.kind << std::endl;
     
-      cout << "Operator: " << postfix.op << endl;
+      std::cout << "Operator: " << postfix.op << std::endl;
 
-      TreeNodes::IdentifierNode arg = get<TreeNodes::IdentifierNode>(*postfix.argument);
-      cout << "Argument: " << arg.name << endl;
-    } else if (holds_alternative<TreeNodes::VariableNode>(node)) {
-      TreeNodes::VariableNode variable = get<TreeNodes::VariableNode>(node);
-      cout << "Kind: " << variable.kind << endl;
+      TreeNodes::IdentifierNode arg = std::get<TreeNodes::IdentifierNode>(*postfix.argument);
+      std::cout << "Argument: " << arg.name << std::endl;
+    } else if (std::holds_alternative<TreeNodes::VariableDeclarationNode>(node)) {
+      TreeNodes::VariableDeclarationNode variable = std::get<TreeNodes::VariableDeclarationNode>(node);
+      std::cout << "Kind: " << variable.kind << std::endl;
 
-      cout << "Variable_Type: " << variable.type << endl;
+      std::cout << "Variable_Type: " << variable.type.typeValue << std::endl;
       
-      cout << "IsConstant: ";
+      std::cout << "IsConstant: ";
 
-      (variable.isConstant) ? cout << "true\n" : cout << "false\n";
+      (variable.isConstant) ? std::cout << "true\n" : std::cout << "false\n";
 
-      cout << "Value: " << YELLOW;
+      std::cout << "Value: " << YELLOW;
 
       logNode(*variable.value);
-    } else if (holds_alternative<TreeNodes::ParamNode>(node)) {
-      TreeNodes::ParamNode param = get<TreeNodes::ParamNode>(node);
-      cout << "Kind: " << param.kind << endl;
-      cout << "Param_Type: " << param.type << endl;
-      cout << "Ident: ";
+    } else if (std::holds_alternative<TreeNodes::ParamNode>(node)) {
+      TreeNodes::ParamNode param = std::get<TreeNodes::ParamNode>(node);
+      std::cout << "Kind: " << param.kind << std::endl;
+      std::cout << "Param_Type: " << param.type.typeValue << std::endl;
+      std::cout << "Ident: ";
       logNode(*param.ident);
-    } else if (holds_alternative<TreeNodes::FunctionNode>(node)) {
-      TreeNodes::FunctionNode fn = get<TreeNodes::FunctionNode>(node);
-      cout << "Kind: " << fn.kind << endl;
-      cout << "Ident: (";
+    } else if (std::holds_alternative<TreeNodes::FunctionDeclarationNode>(node)) {
+      TreeNodes::FunctionDeclarationNode fn = std::get<TreeNodes::FunctionDeclarationNode>(node);
+      std::cout << "Kind: " << fn.kind << std::endl;
+      std::cout << "Ident: (";
       logNode(*fn.ident);
-      cout << ")\n";
+      std::cout << ")\n";
 
-      cout << "Return_Type: " <<  fn.functionReturnType << endl;
-      cout << "Params: " << YELLOW << " (";
+      std::cout << "Return_Type: " <<  fn.functionReturnType.typeValue << std::endl;
+      std::cout << "Params: " << YELLOW << " (";
 
       for (auto const param : fn.params) {
-        cout << "PARAM ===>\n";
+        std::cout << "PARAM ===>\n";
         logNode(param);
       };
-      cout << ")" << DEFAULT << endl;
+      std::cout << ")" << DEFAULT << std::endl;
 
-      cout << "BLOCK: " << GREEN  << " (";
+      std::cout << "BLOCK: " << GREEN  << " (";
       logNode(fn.block);
-      cout << GREEN << ") " << DEFAULT << endl; 
-    } else if (holds_alternative<TreeNodes::BlockStatementNode>(node)) {
-      TreeNodes::BlockStatementNode block = get<TreeNodes::BlockStatementNode>(node);
+      std::cout << GREEN << ") " << DEFAULT << std::endl; 
+    } else if (std::holds_alternative<TreeNodes::BlockStatementNode>(node)) {
+      TreeNodes::BlockStatementNode block = std::get<TreeNodes::BlockStatementNode>(node);
 
-      cout << "Kind: " << block.kind << endl;
+      std::cout << "Kind: " << block.kind << std::endl;
 
-      cout << "Statements: \n";
+      std::cout << "Statements: \n";
 
       for (const auto &stmnt : block.stmnts) {
-        cout << "\tSTMNT: " << YELLOW << "( ";
+        std::cout << "\tSTMNT: " << YELLOW << "( ";
         logNode(stmnt);
-        cout << "\t)" << DEFAULT << endl;
+        std::cout << "\t)" << DEFAULT << std::endl;
       };
     };
 };
 
 void logTree(TreeNodes::Program tree) {
 
-  cout << "AST SIZE: " << tree.body.size() << endl;
+  std::cout << "AST SIZE: " << tree.body.size() << std::endl;
 
   if (tree.body.size() > 0) {
   
@@ -199,6 +188,6 @@ void logTree(TreeNodes::Program tree) {
     };
 
   } else {
-    cout << "Tree Is Empty!\n";
+    std::cout << "Tree Is Empty!\n";
   };
 };

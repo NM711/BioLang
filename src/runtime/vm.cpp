@@ -40,25 +40,17 @@ RuntimeResultState BioVirtualMachine::dispatch() {
 
       Data data = Data();
 
-      if (v1.isInt() && v2.isInt()) {
+      if (this->checker.isInt(v1) && this->checker.isInt(v2)) {
         data.value = get<int>(v1.value) + get<int>(v2.value);
-      } else if (v1.isFloat() && v2.isFloat()) {
+      } else if (this->checker.isFloat(v1) && this->checker.isFloat(v2)) {
         data.value = get<float>(v1.value) + get<float>(v2.value);
-      } else if (v1.isString() && v2.isString()) {
+      } else if (this->checker.isString(v1) && this->checker.isString(v2)) {
         data.value = get<string>(v1.value) + get<string>(v2.value);
       } else {
         return STATE_RUNTIME_ERROR;
       };
 
       this->vmStack.push(data);
-
-      if (this->vmStack.top().isInt()) {
-        cout << "RESULT: " << get<int>(this->vmStack.top().value) << endl;
-      };
-
-       if (this->vmStack.top().isString()) {
-        cout << "RESULT: " << get<string>(this->vmStack.top().value) << endl;
-      };
 
       return STATE_OK;
     };

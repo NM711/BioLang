@@ -65,3 +65,45 @@ Objects is one way in which you can achieve composition in BioLang, objects can 
     };
   };
 ```
+
+## Modules
+
+(Module System has not been implemented yet)
+
+
+For the module system there is a few ways in which you can export declaration the first is by
+having an "export" keyword next to the declaration you wish to export. Note that exporting from a module
+will only work if you have a valid "module" keyword at the top level of the file and a name for the module you are 
+working on. An example can be seen below.
+
+```rust
+  module "math";
+
+  export fn add: int (x: int, y: int) {
+    return x + y;
+  };
+
+  export fn subtrat: int (x: int, y: int) {
+    return x - y;
+  };
+
+```
+
+Also note that when you use the export keyword, you are essentially creating a contract between you and the module. You are
+saying that those declarations you are exporting will be exposed to anyone, they are automatically by default always going
+to be public to be used anywhere until, you remove the export.
+
+Now for importing the idea is pretty straight forward, all you must do is set the path to the module and import it by the
+name you assigned to it.
+
+Modules essentially work as one big object, you can have more objects, functions, variables, etc, within it.
+
+```python
+  import math from "/your/file/path.bl"
+
+  fn main(): int {
+    math->add(10, 3)
+
+    return 0;
+  };
+```

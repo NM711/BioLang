@@ -6,8 +6,8 @@
 #include <variant>
 #include <string>
 
-void dissasembleChunk(list<Instruction> &chunk);
+void dissasembleChunk(std::list<Instruction> &chunk);
 void dissasembleInstruction(Instruction &instruction);
 void logTree(TreeNodes::Program tree);
-void logWarning(string str);
+void logWarning(std::string str);
 #endif

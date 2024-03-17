@@ -10,3 +10,5 @@
 3. Work on VM
 
 4. Fix lexer line number issue
+
+5. Tree nodes should contain the position of the node in the text file, this will be useful for the second pass and any errors encountered after it.

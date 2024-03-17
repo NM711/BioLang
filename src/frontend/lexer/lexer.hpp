@@ -1,18 +1,15 @@
 #ifndef LEXER_HPP
 #define LEXER_HPP
 
-#include <exception>
 #include <iostream>
 #include <list>
 #include <map>
 #include <unordered_map>
 #include <variant>
 
-using namespace std;
-
 struct LineInfo {
-  int row;
-  int col;
+  unsigned row;
+  unsigned col;
 };
 
 enum TokenIdentifiers {
@@ -34,10 +31,12 @@ enum TokenIdentifiers {
   Boolean,
   Object,
   Void,
+  Null,
   IntegerLiteral,
   FloatLiteral,
   BooleanLiteral,
   StringLiteral,
+  NullLiteral,
   LeftCurly,
   RightCurly,
   LeftParenthesis,
@@ -65,52 +64,35 @@ enum TokenIdentifiers {
   Increment,
   Decrement,
   Break,
+  As,
   Continue,
   FieldState,
 };
 
 struct Token {
   TokenIdentifiers id;
-  string lexeme;
+  std::string lexeme;
   LineInfo info;
-};
-
-class SyntaxError : public exception {
-
-  private:
-    string mssg;
-    LineInfo lineInfo;
-
-  public:
-      SyntaxError(const string message, const LineInfo info) : mssg(message), lineInfo(info) {};
-
-      const char *what() {
-        return "SyntaxError";
-      };
-
-      void errorMssg() {
-        cout << this->what() << " >>>>>> " << this->mssg << " " << "(col: " << this->lineInfo.col << ", row: " << this->lineInfo.row << ")\n";
-      };
 };
 
 class BioLexer {
   private:
-    list<Token> tokens;
+    std::list<Token> tokens;
     LineInfo info;
-    string input;
+    std::string input;
     private: int index;
 
   public: BioLexer();
 
   private:
-    unordered_map<string, TokenIdentifiers> lookup;
+    std::unordered_map<std::string, TokenIdentifiers> lookup;
     bool errorState;
     void updateLineInfo();
     void initLookupKeywords();
-    void pushToken(string kw, TokenIdentifiers id);
-    bool exists(const std::variant<string, char> &key);
-    void matchAndPush(string key);
-    void checkExistsPush(string &key);
+    void pushToken(std::string kw, TokenIdentifiers id);
+    bool exists(const std::variant<std::string, char> &key);
+    void matchAndPush(std::string key);
+    void checkExistsPush(std::string &key);
     void handleComment();
     void handleString();
     void handleSpecial();
@@ -123,8 +105,8 @@ class BioLexer {
     char eat();
 
   public:
-    void setInput(string input);
-    list<Token> tokenize();
+    void setInput(std::string input);
+    std::list<Token> tokenize();
 };
 
 #endif

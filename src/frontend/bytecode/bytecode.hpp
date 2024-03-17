@@ -4,29 +4,11 @@
 #include <stack>
 #include <variant>
 #include "../parser/parser.hpp"
-
-typedef variant<float, int, string> Value;
-
-class Data {
-  public:
-    Value value;
-
-    bool isInt() {
-      return holds_alternative<int>(value);
-    };
-
-    bool isFloat() {
-      return holds_alternative<float>(value);
-    };
-
-    bool isString() {
-      return holds_alternative<string>(value);
-    };
-};
+#include "../../common.hpp"
 
 struct Instruction {
   unsigned short code;
-  Data *data;
+  Value value;
 };
 
 // Operation codes for our bytecode
@@ -69,16 +51,16 @@ enum OperationCode {
 
 class BytecodeCompiler {
   private:
-    list<Instruction> chunk;
+    std::list<Instruction> chunk;
     TreeNodes::Program source;
-    unsigned short compileOperator(string op);
+    unsigned short compileOperator(std::string op);
     void compileNode(TreeNodes::Node &node);
     void compileLiteral(TreeNodes::LiteralNode &literal);
-    Instruction generateInstruction(unsigned short code, Data *data);
+    Instruction generateInstruction(unsigned short code, Value *value);
   public:
     BytecodeCompiler();
     void setSource(TreeNodes::Program program);
-    list<Instruction> getInstructions();
+    std::list<Instruction> getInstructions();
     void compile();
 };
 
